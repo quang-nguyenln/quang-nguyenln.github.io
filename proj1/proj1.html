@@ -121,20 +121,24 @@
         <p>This implementation performs on par with constant cropping on the majority of the images. However, for images where the different channels are more significantly misaligned, my implementation performs worse because the misalignment will cause the average pixel value to be more moderate and more misinformed rows and columns are not cropped (this is evident in the larger size of the final result). Here are some images for comparison:</p>
         <div class="image-container">
             <div class="image-single">
-                <img src="out/vanilla/onion_church.jpeg" alt="vanilla of onion church">
-                <p>Constant Cropping of onion_church</p>
+                <p>Green: (33, -11); Red: (140, -26)</p>
+                <img src="out/vanilla/sculpture.jpeg" alt="vanilla of sculpture">
+                <p>Constant Cropping of sculpture</p>
             </div>
             <div class="image-single">
-                <img src="out/autocrop/onion_church.jpeg" alt="autocrop of onion church">
-                <p>Automatic Cropping of onion_church</p>
+                <p>Green: (33, -11); Red: (-285, 0)</p>
+                <img src="out/autocrop/sculpture.jpeg" alt="autocrop of sculpture">
+                <p>Automatic Cropping of sculpture</p>
             </div>
         </div>
         <div class="image-container">
             <div class="image-single">
+                <p>Green: (55, 8); Red: (118, 12)</p>
                 <img src="out/vanilla/lady.jpeg" alt="vanilla of lady">
                 <p>Constant Cropping of lady</p>
             </div>
             <div class="image-single">
+                <p>Green: (133, -7); Red: (128, -11)</p>
                 <img src="out/autocrop/lady.jpeg" alt="autocrop of lady">
                 <p>Automatic Cropping of lady</p>
             </div>
