@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Project 1 by Quang Nguyen</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
+</head>
+<body>
+    <div class="back-button">
+        <a href="../index.html">&larr; Back to Portfolio</a>
+    </div>
+    <div class="body-container">
+        <h1>IMAGES OF THE RUSSIAN EMPIRE:</h1>
+        <h2>Colorizing the Prokudin-Gorskii photo collection</h2>
+        <h3>Quang Nguyen, SID: 3036566521</h3>
+
+        <h4>1. Project Overview</h4>
+        <p>This project aims to take the digitized Prokudin-Gorskii glass plate images, which include three similar images of different shades (since each of them was exposed to a different color filter) vertically stacked on top of one another, and output a single RGB color image using various image processing techniques. Here are examples of input images:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="data/monastery.jpg" alt="input image of monastery">
+            </div>
+            <div class="image-single">
+                <img src="data/tobolsk.jpg" alt="input image of tobolsk">
+            </div>
+        </div>
+
+        <h4>2. Single-scale Alignment</h4>
+        <p>For the small images, i.e. the ones that end with .jpg, I implemented an exhaustive search algorithm that loop over a window of possible displacements (I did <span>&#177;</span>5% of the image width and height) and computed the displacement with the highest <b>Normalized Cross-Correlation (NCC)</b>. For displacing the image, I implemented a custom function that uses <code>np.roll</code> to shift the image and then fill the rolled-over pixels with the values of the closest existing pixels. Since I noticed that each of the image will have some sort of black border, I also cropped 10% of the image width and height (i.e. 5% from each edge) for better alignment. Here are my aligned images with their displacements:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <p>Green: (5, 2); Red: (12, 3)</p>
+                <img src="out/cathedral.jpg" alt="aligned image of church">
+                <p>Cathedral</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (-3, 2); Red: (3, 2)</p>
+                <img src="out/monastery.jpg" alt="aligned image of monastery">
+                <p>Monastery</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (3, 3); Red: (6, 3)</p>
+                <img src="out/tobolsk.jpg" alt="aligned image of tobolsk">
+                <p>Tobolsk</p>
+            </div>
+        </div>
+
+        <h4>3. Multi-scale Alignment</h4>
+        <h5>3.1. Vanilla Implementation (Image Pyramid with Constant Cropping)</h5>
+        <p>For larger images, i.e. the ones that end with .tif, the exhaustive search algorithm was simply insufficient and too expensive because of the high resolution of the images. Consequently, I implemented an image pyramid of 5 levels with the highest level being the full size image and downsampled by a factor of 2 for each subsequent level. Starting at the smallest image, I did the exhaustive search over the window of \([-15, 15]\) pixels to obtain the optimal displacement. Upon moving to the next level, the image size will double and I will also double the said displacement to ensure consistency. I will then search <span>&#177;</span>3 pixels around this displacement for the current higher resolution. This process repeats until an optimal displacement is derived for the original image. Here are my aligned images with their displacements:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <p>Green: (25, -11); Red: (58, -5)</p>
+                <img src="out/vanilla/church.jpeg" alt="aligned image of church">
+                <p>Church</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (49, 24); Red: (104, 56)</p>
+                <img src="out/vanilla/emir.jpeg" alt="aligned image of emir">
+                <p>Emir</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (60, 16); Red: (124, 14)</p>
+                <img src="out/vanilla/harvesters.jpeg" alt="aligned image of harvesters">
+                <p>Harvesters</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <div class="image-single">
+                <p>Green: (40, 17); Red: (89, 23)</p>
+                <img src="out/vanilla/icon.jpeg" alt="aligned image of icon">
+                <p>Icon</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (55, 8); Red: (118, 12)</p>
+                <img src="out/vanilla/lady.jpeg" alt="aligned image of lady">
+                <p>Lady</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (82, 10); Red: (178, 12)</p>
+                <img src="out/vanilla/melons.jpeg" alt="aligned image of melons">
+                <p>Melons</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <div class="image-single">
+                <p>Green: (51, 26); Red: (108, 36)</p>
+                <img src="out/vanilla/onion_church.jpeg" alt="aligned image of onion church">
+                <p>Onion Church</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (33, -11); Red: (140, -26)</p>
+                <img src="out/vanilla/sculpture.jpeg" alt="aligned image of sculpture">
+                <p>Sculpture</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (79, 29); Red: (176, 36)</p>
+                <img src="out/vanilla/self_portrait.jpeg" alt="aligned image of self portrait">
+                <p>Self-portrait</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <div class="image-single">
+                <p>Green: (54, 13); Red: (112, 10)</p>
+                <img src="out/vanilla/three_generations.jpeg" alt="aligned image of three generationsp">
+                <p>Three Generations</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (42, 6); Red: (87, 32)</p>
+                <img src="out/vanilla/train.jpeg" alt="aligned image of train">
+                <p>Train</p>
+            </div>
+        </div>
+
+        <h5>3.2. Automatic Cropping</h5>
+        <p>The next bell and whistle that I implemented is <b>Automatic Cropping</b>. I noticed that for edges that are either black or white, the average pixel value will be either extremely high or extremely low (converging towards 0 or 1). Thus, I loop through every row and column that is at most 10% from the edges and for each of them, I calculate the average pixel value and crop any row/column whose pixel value is outside of the range \([0.1, 0.9]\).</p>
+        <p>This implementation performs on par with constant cropping on the majority of the images. However, for images where the different channels are more significantly misaligned, my implementation performs worse because the misalignment will cause the average pixel value to be more moderate and more misinformed rows and columns are not cropped (this is evident in the larger size of the final result). Here are some images for comparison:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/vanilla/onion_church.jpeg" alt="vanilla of onion church">
+                <p>Constant Cropping of onion_church</p>
+            </div>
+            <div class="image-single">
+                <img src="out/autocrop/onion_church.jpeg" alt="autocrop of onion church">
+                <p>Automatic Cropping of onion_church</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/vanilla/lady.jpeg" alt="vanilla of lady">
+                <p>Constant Cropping of lady</p>
+            </div>
+            <div class="image-single">
+                <img src="out/autocrop/lady.jpeg" alt="autocrop of lady">
+                <p>Automatic Cropping of lady</p>
+            </div>
+        </div>
+        
+        <h5>3.3. Automatic Color Balancing</h5>
+        <p>An additional bell and whistle that I implemted is <b>Color Balancing</b>. The method that I wrote is from <a href="http://www.ipol.im/pub/art/2011/llmps-scb/">Limare et. al</a> in 2011 and it outlines as followed. First, I flatten the image and sort all the pixel values. Then, I define \(V_{min}, V_{max}\) to be the pixel values at the 5% and 95% percentile. For any pixel whose value is lower than \(V_{min}\) or higher than \(V_{max}\), I will set their value to be equal to \(V_{min}\) and \(V_{max}\). Finally, I will normalize the transformed image such that the pixel values range from 0 to 1.</p>
+        <p>This implementation improves the quality of images whose scene or object has higher exposure to natural light as it helps the object stands out more from the background. Here are some examples: </p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/vanilla/three_generations.jpeg" alt="vanilla of three_generations">
+                <p>Vanilla of three_generations</p>
+            </div>
+            <div class="image-single">
+                <img src="out/color/three_generations.jpeg" alt="color balancing of three_generations">
+                <p>Color Balancing of three_generations</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/vanilla/self_portrait.jpeg" alt="vanilla of self_portrait">
+                <p>Vanilla of self_portrait</p>
+            </div>
+            <div class="image-single">
+                <img src="out/color/self_portrait.jpeg" alt="color balancing of self_portrait">
+                <p>Color Balancing of self_portrait</p>
+            </div>
+        </div>
+
+        <h5>3.4. Automatic Contrasting - Histogram Equalization</h5>
+        <p>The next bell and whistle that I implemented is <b>Automatic Contrasting</b>, which I accomplished by using <code>skimage.exposure.equalize_hist</code>. This improves the quality of some images since it balances the light intensity and contrast of the objects in the images. Here are some examples that show improvement:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/vanilla/harvesters.jpeg" alt="vanilla of harvesters">
+                <p>Vanilla of harvesters</p>
+            </div>
+            <div class="image-single">
+                <img src="out/hist/harvesters.jpeg" alt="hist_equal of harvesters">
+                <p>Histogram Equalization of harvesters</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/vanilla/lady.jpeg" alt="vanilla of lady">
+                <p>Vanilla of lady</p>
+            </div>
+            <div class="image-single">
+                <img src="out/hist/lady.jpeg" alt="hist_equal of lady">
+                <p>Histogram Equalization of lady</p>
+            </div>
+        </div>
+        
+        <h5>3.5. Sobel Edge Detection</h5>
+        <p>Another bell and whistle that I implemented is <b>Sobel Edge Detection</b>. I noticed that for images where the channels have vastly different brightness (i.e. the RGB values don't align well for a single pixel), vanilla alignment with NCC doesn't work well because the displacement with the highest NCC need not be optimal. As a result, I used to <code>skimage.filters.sobel</code> to detect the edges in the images before aligning them with image pyramid. Here are images that improve thanks to Sobel edge detection: </p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/vanilla/emir.jpeg" alt="vanilla of emir">
+                <p>Vanilla of emir</p>
+            </div>
+            <div class="image-single">
+                <img src="out/sobel/emir.jpeg" alt="sobel of emir">
+                <p>Sobel Edge Detection of emir</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/vanilla/church.jpeg" alt="vanilla of church">
+                <p>Vanilla of church</p>
+            </div>
+            <div class="image-single">
+                <img src="out/sobel/church.jpeg" alt="sobel of church">
+                <p>Sobel Edge Detection of church</p>
+            </div>
+        </div>
+
+        <h4>4. Final Result</h4>
+        <p>For the final colored images, I first automatically crop the channels, preprocess them with Sobel Edge Detection, align them with an image pyramid, and apply automatic color balancing on the optimal alignment. Here are the colored images with their displacements:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <p>Green: (25, -2); Red: (58, -14)</p>
+                <img src="out/final/church.jpeg" alt="aligned image of church">
+                <p>Church</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (49, 24); Red: (107, 40)</p>
+                <img src="out/final/emir.jpeg" alt="aligned image of emir">
+                <p>Emir</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (60, 17); Red: (123, 13)</p>
+                <img src="out/final/harvesters.jpeg" alt="aligned image of harvesters">
+                <p>Harvesters</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <div class="image-single">
+                <p>Green: (40, 16); Red: (91, 23)</p>
+                <img src="out/final/icon.jpeg" alt="aligned image of icon">
+                <p>Icon</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (59, -9); Red: (130, -19)</p>
+                <img src="out/final/lady.jpeg" alt="aligned image of lady">
+                <p>Lady</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (78, 5); Red: (176, 10)</p>
+                <img src="out/final/melons.jpeg" alt="aligned image of melons">
+                <p>Melons</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <div class="image-single">
+                <p>Green: (52, 24); Red: (107, 35)</p>
+                <img src="out/final/onion_church.jpeg" alt="aligned image of onion church">
+                <p>Onion Church</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (33, -11); Red: (140, -26)</p>
+                <img src="out/final/sculpture.jpeg" alt="aligned image of sculpture">
+                <p>Sculpture</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (79, 30); Red: (176, 37)</p>
+                <img src="out/final/self_portrait.jpeg" alt="aligned image of self portrait">
+                <p>Self-portrait</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <div class="image-single">
+                <p>Green: (54, 12); Red: (112, 9)</p>
+                <img src="out/final/three_generations.jpeg" alt="aligned image of three generationsp">
+                <p>Three Generations</p>
+            </div>
+            <div class="image-single">
+                <p>Green: (41, 1); Red: (85, 29)</p>
+                <img src="out/final/train.jpeg" alt="aligned image of train">
+                <p>Train</p>
+            </div>
+        </div>
+        <footer>
+            <h2>Acknowledgements</h2>
+            <p>This project displays the results for Project 1 of CS 180 at UC Berkeley. Methods were adapted from various sources, including course staff suggestions, external libraries such as <code>scikit-image</code> and <code>numpy</code>, and algorithms from <a href="http://www.ipol.im/pub/art/2011/llmps-scb/">Limare et. al</a>.</p>
+        </footer>
+    </div>
+
+    
+</body>
+</html>
