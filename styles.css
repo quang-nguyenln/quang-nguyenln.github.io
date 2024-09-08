@@ -28,6 +28,31 @@ h1 {
     font-size: 2.5em;
 }
 
+.back-button {
+    left: 20px;
+    z-index: 1000;
+    position: fixed;
+    top: 20px;
+}
+
+.back-button a {
+    font-size: 1em;
+    font-weight: bold;
+    padding: 10px 20px;
+    background: linear-gradient(90deg, #018b6f, #016752);
+    border-radius: 30px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+    text-decoration: none;
+    color: #fff;
+}
+
+.back-button a:hover {
+    background: #0c5949;
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
 h2 {
     margin-top: -30px;
     font-size: 1.8em;
@@ -83,6 +108,32 @@ p {
     margin-right: 8px;
 }
 
+
+.button-container {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.button {
+    background-color: #036843;
+    color: white;
+    padding: 15px 30px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.button:hover {
+    background-color: #12b378;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    border: 2px solid #fff;
+}
+
 .image-single img {
     max-width: 100%;
     height: auto;
@@ -120,52 +171,4 @@ footer {
     color: #1deba0;
 }
 
-.button-container {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 20px;
-    text-align: center;
-}
 
-.button {
-    background-color: #036843;
-    color: white;
-    padding: 15px 30px;
-    text-decoration: none;
-    border-radius: 5px;
-    font-size: 1.1em;
-    transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.button:hover {
-    background-color: #12b378;
-    transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    border: 2px solid #fff;
-}
-
-.back-button {
-    left: 20px;
-    z-index: 1000;
-    position: fixed;
-    top: 20px;
-}
-
-.back-button a {
-    font-size: 1em;
-    font-weight: bold;
-    padding: 10px 20px;
-    background: linear-gradient(90deg, #018b6f, #016752);
-    border-radius: 30px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
-    text-decoration: none;
-    color: #fff;
-}
-
-.back-button a:hover {
-    background: #0c5949;
-    transform: scale(1.05);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-}
