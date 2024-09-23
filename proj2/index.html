@@ -25,7 +25,7 @@
 
         <h4>2. Fun with Filters</h4>
         <h5>2.1. Finite Difference Operator</h5>
-        <p>I defined the two finite difference operators <code>D_x</code> and <code>D_y</code> to be <code>np.array([[1, -1]])</code> and <code>np.array([[1, -1]]).T</code> respectively. I then convolved these two kernels with the image using <code>scipy.signal.convolve2d</code> to produce the partial derivatives with respect to x and y, named <code>gx</code> and <code>gy</code>. To compute the gradient magnitude image, I did <code>np.sqrt(gx ** 2 + gy ** 2)</code>, which treats the corresponding pair pixel values of the two partial-derivative images as a gradient vector and then calculates its L2-norm to obtain the final pixel value. I then binarized this image with threshold 0.1 and 0.2 to obtain edge images. </p>
+        <p>I defined the two finite difference operators <code>D_x</code> and <code>D_y</code> to be <code>np.array([[1, -1]])</code> and <code>np.array([[1, -1]]).T</code> respectively. I then convolved these two kernels with the image using <code>scipy.signal.convolve2d</code> to produce the partial derivatives with respect to x and y, named <code>gx</code> and <code>gy</code>. To compute the gradient magnitude image, I did <code>np.sqrt(gx ** 2 + gy ** 2)</code>, which treats the corresponding pair of pixel values of the two partial-derivative images as a gradient vector and then calculates its L2-norm to obtain the final pixel value. I then binarized this image with threshold 0.1 and 0.2 to obtain edge images. </p>
         <div class="image-container">
             <div class="image-single">
                 <img src="out/1.1/gx.jpg" alt="partial derivative with respect to x">
