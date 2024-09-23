@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Project 2 by Quang Nguyen</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
+</head>
+<body>
+    <div class="back-button">
+        <a href="../index.html">&larr; Back to Portfolio</a>
+    </div>
+    <div class="body-container">
+        <h1>FUN WITH FILTERS AND FREQUENCES</h1>
+        <h3>Quang Nguyen, SID: 3036566521</h3>
+
+        <h4>1. Project Overview</h4>
+        <p>This project aims to build intuitions behind image filtering and investigates different methods of leverage frequencies to alter, process, blend, and combine images. More specifically, as part of this project, I: </p>
+        <ul class="actions-list">
+            <li>Leveraged Gaussian filter and its derivative to detect edges in an image.</li>
+            <li>Blurred and sharpened images with Gaussian filter.</li>
+            <li>Created a hybrid image from two images by low-pass filtering one image and high-pass filtering the other.</li>
+            <li>Blended and splined images with Gaussian and Laplacian stacks.</li>
+        </ul>
+
+        <h4>2. Fun with Filters</h4>
+        <h5>2.1. Finite Difference Operator</h5>
+        <p>I defined the two finite difference operators <code>D_x</code> and <code>D_y</code> to be <code>np.array([[1, -1]])</code> and <code>np.array([[1, -1]]).T</code> respectively. I then convolved these two kernels with the image using <code>scipy.signal.convolve2d</code> to produce the partial derivatives with respect to x and y, named <code>gx</code> and <code>gy</code>. To compute the gradient magnitude image, I did <code>np.sqrt(gx ** 2 + gy ** 2)</code>. I then binarized this image with threshold 0.1 and 0.2 to obtain edge images. </p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/1.1/gx.jpg" alt="partial derivative with respect to x">
+                <p>Partial derivative with respect to <code>x</code></p>
+            </div>
+            <div class="image-single">
+                <img src="out/1.1/gy.jpg" alt="partial derivative with respect to y">
+                <p>Partial derivative with respect to <code>y</code></p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/1.1/gmi.jpg" alt="gradient magnitude image">
+                <p>Gradient magnitude image</p>
+            </div>
+            <div class="image-single">
+                <img src="out/1.1/bgmi1.jpg" alt="binarized gradient magnitude image 0.1">
+                <p>Binarized gradient magnitude image with <code>threshold = 0.1</code></p>
+            </div>
+            <div class="image-single">
+                <img src="out/1.1/bgmi2.jpg" alt="binarized gradient magnitude image 0.2">
+                <p>Binarized gradient magnitude image with <code>threshold = 0.2</code></p>
+            </div>
+        </div>
+
+        <h5>2.2. Derivative of Gaussian (DoG) Filter</h5>
+        <h6>2.2.1. Finite Difference Operator of Blurred Image</h6>
+        <p>I created a Gaussian kernel with <code>kernel_size = 10</code> and <code>sigma = kernel_size / 6</code> with <code>cv2.getGaussianKernel</code>. I then blurred the image by convolving it with this Gaussian kernel. The blurred image would then undergo the same process and operations as the previous part 2.1. </p>
+        <p>There are some differences in the images produced by this method comparing to the results from the previous part. The partial derivatives with respect to x and with respect to y are more smoothed out in this case, similar to the output of convolving the result from previous part directly with the Gaussian (this is because convolution is associative). The edges in the binarized gradient magnitude image (the edge image) are also thicker and fuller. Last but not least, given the same threshold of 0.1, some of the edges (for example, the ones in the camera) are absent in the blurred one. </p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/1.2/ggx.jpg" alt="partial derivative with respect to x">
+                <p>Partial derivative with respect to <code>x</code></p>
+            </div>
+            <div class="image-single">
+                <img src="out/1.2/ggy.jpg" alt="partial derivative with respect to y">
+                <p>Partial derivative with respect to <code>y</code></p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/1.2/ggmi.jpg" alt="gradient magnitude image">
+                <p>Gradient magnitude image</p>
+            </div>
+            <div class="image-single">
+                <img src="out/1.2/gbgmi1.jpg" alt="binarized gradient magnitude image 0.05">
+                <p>Binarized gradient magnitude image with <code>threshold = 0.05</code></p>
+            </div>
+            <div class="image-single">
+                <img src="out/1.2/gbgmi2.jpg" alt="binarized gradient magnitude image 0.1">
+                <p>Binarized gradient magnitude image with <code>threshold = 0.1</code></p>
+            </div>
+        </div>
+        
+        <h6>2.2.2. Derivative of Gaussian</h6>
+        <p>I first blurred the finte difference operators <code>D_x</code> and <code>D_y</code> using the same Gaussian kernel as the previous part 2.2.1, producing the partial derivatives of the Gaussian kernel with respect to <code>x</code> (named <code>gdx</code>) and <code>y</code> (named <code>gdy</code>) respectively. Then, I employ the same method as part 2.1 using <code>gdx</code> and <code>gdy</code> to produce the following images. Inspecting the results closely, I can verify that the images obtained in this part are similar, if not identical, to those in the other method in 2.2.1, aside from minor differences in some edges because of noise. </p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/1.2/gfx.jpg" alt="partial derivative of image with respect to x">
+                <p>Partial derivative of image with respect to <code>x</code></p>
+            </div>
+            <div class="image-single">
+                <img src="out/1.2/gfy.jpg" alt="partial derivative of image with respect to y">
+                <p>Partial derivative of image with respect to <code>y</code></p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/1.2/gfmi.jpg" alt="gradient magnitude image">
+                <p>Gradient magnitude image</p>
+            </div>
+            <div class="image-single">
+                <img src="out/1.2/bfmi1.jpg" alt="binarized gradient magnitude image 0.05">
+                <p>Binarized gradient magnitude image with <code>threshold = 0.05</code></p>
+            </div>
+            <div class="image-single">
+                <img src="out/1.2/bfmi2.jpg" alt="binarized gradient magnitude image 0.1">
+                <p>Binarized gradient magnitude image with <code>threshold = 0.1</code></p>
+            </div>
+        </div>
+
+        <h4>3. Fun with Frequencies</h4>
+        <h5>3.1. Image "Sharpening"</h5>
+        <h6>3.1.1. Method 1: Multiple operations</h6>
+        <p>I first blurred the image with a Gaussian kernel, which acts as a low pass filter removing higher frequencies. I then subtracted the blurred image from the original image to obtain the high frequencies of the image. Finally, I will add back the high frequencies to the original image to acquire an image with sharpened, or emphasized edges. Syntactically, I computed the following: <code>sharpened_img = img + alpha * (img - blurred_img)</code> where <code>blurred_img = convolve2d(img, gaussian_kernel)</code></p>
+        
+        <h6>3.1.2. Method 2: Single Convolution</h6>
+        <p>Notice that</p>
+        <p>\[f + \alpha( f-f*g) = f * ((1+\alpha)e - \alpha g), \;\;\;\;\;\; \text{where \(e\) denotes the unit impulse, or an identity kernel.}\]</p>
+        <p>I created the identity kernel with <code>numpy</code> and use that to construct the modified kernel <code>sharp_kernel = (1 + alpha) * unit_impulse - alpha * unit_impulse</code>. Then, I conlved the original image with this modified kernel to obtain the sharpened image.</p>
+        
+        <h6>3.1.3. Results</h6>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.1/taj_original.jpg" alt="original image of taj">
+                <p>Original Image of Taj Mahal</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.1/taj_blurred.jpg" alt="blurred image of taj">
+                <p>Blurred Image of Taj Mahal</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.1/taj_sharpened_1.jpg" alt="sharpened image of taj 1">
+                <p>Sharpened Image of Taj Mahal (\(\alpha = 1\))</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.1/taj_sharpened_2.jpg" alt="sharpened image of taj 2">
+                <p>Sharpened Image of Taj Mahal (\(\alpha = 2\))</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.1/opera_original.jpg" alt="original image of taj">
+                <p>Original Image of Sydney Opera House</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.1/opera_blurred.jpg" alt="blurred image of taj">
+                <p>Blurred Image of Sydney Opera House</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.1/opera_sharpened_1.jpg" alt="sharpened image of opera house 1">
+                <p>Sharpened Image of Sydney Opera House (\(\alpha = 1\))</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.1/opera_sharpened_2.jpg" alt="sharpened image of opeara house 2">
+                <p>Sharpened Image of Sydney Opera House (\(\alpha = 2\))</p>
+            </div>
+        </div>
+
+        <h6>3.1.4. Evaluation by Blurring and Resharpening</h6>
+        <p>I first blurred the image with a Gaussian kernel of <code>kernel_size = 20</code> and <code>sigma = kernel_size / 6</code>. I then resharpened the blurred image using the same Gaussian kernel and <code>alpha = 2</code>. </p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.1/notredame_original.jpg" alt="original image of notre-dame">
+                <p>Original Image of Notre-Dame</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.1/notredame_blurred.jpg" alt="blurred image of notre-dame">
+                <p>Blurred Image of Notre-Dame</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.1/notredame_resharpened.jpg" alt="resharpened image of notre-dame">
+                <p>Resharpened Image of Notre-Dame</p>
+            </div>
+        </div>
+        <p>The resharpened image contains many of the high frequencies of the original image, as evident by the well-defined edges of the cathedral. That is, sharpening does well in recovering from the blurring to an extent. However, the effects of blurring still exist in the resharpened image as sharpening was unable to recover some of the lost information/frequencies (for example, the trees at the bottom of the catheral still look a little blurry or some columns on the left of the image are not shrewd-looking).</p>
+        
+        <h5>3.2. Hybrid Images</h5>
+        <h6>3.2.1. Algorithm</h6>
+        <p>Given two images, I extracted the low frequencies from one image using a Gaussian filter with <code>sigma = sigma1</code> and <code>kernel_size = 6 * sigma1</code> and the high frequecies from the other image by subtracting a Gaussian filter (with <code>sigma = sigma2</code> and <code>kernel_size = 6 * sigma2</code>) from the impulse filter. I then created the hybrid image by adding the low and the high frequencies together. After trying different combinations of grayscale and color, I notice that it works better to use color for both the high-frequency and low-frequency components. </p>
+        
+        <h6>3.2.2. Resulting Hybrid Images</h6>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.2/nutmeg.jpg" alt="image of nutmeg">
+                <p>Nutmeg</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.2/derek.jpg" alt="image of derek">
+                <p>Derek</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.2/derek_nutmeg.jpg" alt="hybrid image of nutmeg and derek">
+                <p>Nutmeg + Derek</p>
+            </div>
+        </div>
+        <p>For this case, I used <code>sigma1 = 6.5</code> to extract the low frequencies from Derek and <code>sigma2 = 15</code> to extract the high frequencies from Nutmeg.</p>
+
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.2/ronaldo.jpg" alt="image of ronaldo">
+                <p>Cristiano Ronaldo</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.2/messi.jpg" alt="image of messi">
+                <p>Lionel Messi</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.2/messi_ronaldo.jpg" alt="hybrid image of ronaldo and messi">
+                <p>Cristiano Messi</p>
+            </div>
+        </div>
+        <p>For this failed case, I used <code>sigma1 = 1</code> to extract the low frequencies from Messi and <code>sigma2 = 3</code> to extract the high frequencies from Ronaldo. This case is a failure to some extent primarily because the two resolutions of the two inputs are too different, making the resulting aligned and combined image seems less natural.</p>
+
+
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.2/bean1.jpg" alt="image of mr. bean">
+                <p>Confused Bean</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.2/bean2.jpg" alt="image of mr. bean">
+                <p>Happy Bean</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.2/bean1_bean2.jpg" alt="hybrid image of bean1 and bean2">
+                <p>Ambiguous Bean</p>
+            </div>
+        </div>
+        <p>For this case, I used <code>sigma1 = 1</code> to extract the low frequencies from Confused Bean and <code>sigma2 = 2.5</code> to extract the high frequencies from Happy Bean.</p>
+
+
+        <h6>3.2.3. Favorite Result with the log magnitude of Fourier transforms</h6>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.2/mark.jpg" alt="image of mark wahlberg">
+                <p>Mark Wahlberg</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.2/matt.jpg" alt="image of matt damon">
+                <p>Matt Damon</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.2/matt_mark.jpg" alt="hybrid image of mark and matt">
+                <p>Mark Damon</p>
+            </div>
+        </div>
+        <p>For this case, I used <code>sigma1 = 4</code> to extract the low frequencies from Mark and <code>sigma2 = 6</code> to extract the high frequencies from Matt.</p>
+
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.2/fouriers.jpg" alt="image of fouriers of matt and mark">
+            </div>
+            <div class="image-single">
+                <img src="out/2.2/hybrid_fourier.jpg" alt="image of fourier of hybrid of matt and mark">
+            </div>
+        </div>
+        <p>We can see from the Fourier transforms that the hybrid image is indeed the sum of the low frequencies of Mark and the high frequencies of Matt.</p>
+        
+        <h5>3.3. Gaussian and Laplacian Stacks</h5>
+        <p>To create the Gaussian stack, I initialized level 0 of the stack with the original image. For each successive level, I blurred the previous level using a Gaussian kernel, ultimately resulting in a stack of images with the same sizes. Within each iteration of the for loop to create the Gaussian stack, I subtracted the newly blurred Gaussian level from the previous Gaussian level to obtain an entry for the Laplacian stack. Finally, I appended the last image from the Gaussian stack to the Laplacian stack, resulting in two stacks with the same number of levels.</p>
+        <p>Here are the Laplacian and Gaussian stacks for the apple image respectively:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.3/apple_laplacian.jpg" alt="laplacian stack of apple">
+                <p>Laplacian stack of apple</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.3/apple_gaussian.jpg" alt="gaussian stack of apple">
+                <p>Gaussian stack of apple</p>
+            </div>
+        </div>
+
+        <p>Here are the Laplacian and Gaussian stacks for the orange image respectively:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.3/orange_laplacian.jpg" alt="laplacian stack of orange">
+                <p>Laplacian stack of orange</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.3/orange_gaussian.jpg" alt="gaussian stack of orange">
+                <p>Gaussian stack of orange</p>
+            </div>
+        </div>
+
+        <h5>3.4. Multiresolution Blending</h5>
+        <h6>3.4.1. Algorithm</h6>
+        <p>I created the Laplacian stacks for each of the two input images. I also constructed a Gaussian stack for the mask input image to smooth out the transition between the two images. Then, I generated the stack for the blended image by running <code>blended_stack = (1 - mask_gaussian) * image_1_laplacian + mask_gaussian * image_2_laplacian</code>. Finally, I collapsed the stack to get the final blended result: <code>np.sum(blended_stack, axis = 0)</code>. </p>
+        <p>For all of the more irregular masks (i.e. aside from the linear mask in Oraple), I used Meta AI's <a href="https://segment-anything.com">Segment Anything</a> to generate them by feeding in an input image and extracting the desired binary mask as a jpg file.</p>
+        <h6>3.4.2. Oraple</h6>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.4/orange.jpeg" alt="image of orange">
+            </div>
+            <div class="image-single">
+                <img src="out/2.4/apple.jpeg" alt="image of apple">
+            </div>
+            <div class="image-single">
+                <img src="out/2.4/orange_apple.jpg" alt="blended image of orange and apple">
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.4/orange_apple_stack.jpg" alt="laplacian stack of blended orange and apple">
+            </div>
+        </div>
+        
+
+        <h6>3.4.3. Penguin Visiting Pyramids</h6>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.4/penguin.jpg" alt="image of penguin">
+            </div>
+            <div class="image-single">
+                <img src="out/2.4/pyramid.jpg" alt="image of pyramid">
+            </div>
+            <div class="image-single">
+                <img src="out/2.4/penguin_pyramid.jpg" alt="blended image of penguin and pyramid">
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.4/penguin_pyramid_stack.jpg" alt="laplacian stack of blended penguin and pyramid">
+            </div>
+        </div>
+
+        <h6>3.4.4. UFO on top of the Golden Gate Bridge</h6>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.4/ufo.jpg" alt="image of ufo">
+            </div>
+            <div class="image-single">
+                <img src="out/2.4/ggb.jpg" alt="image of golden gate bridge">
+            </div>
+            <div class="image-single">
+                <img src="out/2.4/ufo_ggb.jpg" alt="blended image of ufo and golden gate bridge">
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.4/ufo_ggb_stack.jpg" alt="laplacian stack of blended penguin and pyramid">
+            </div>
+        </div>
+
+        <h6>3.4.5. Snowing in Berkeley</h6>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.4/ucberkeley.jpg" alt="image of uc berkeley">
+                <p>Image of Berkeley</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.4/snow.jpg" alt="image of snow">
+                <p>Image of snowing sky</p>
+            </div>
+            <div class="image-single">
+                <img src="out/2.4/berkeley_mask.jpg" alt="mask for berkeley and snow">
+                <p>Mask input image</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.4/berkeley_laplacian.jpg" alt="laplacian stack of uc berkeley">
+                <p>Laplacian stack of Berkeley</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.4/snow_laplacian.jpg" alt="laplacian stack of snow">
+                <p>Laplacian stack of the snowing sky</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.4/berkeley_mask_gaussian.jpg" alt="gaussian stack of mask">
+                <p>Gaussian stack of the mask input image</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.4/snow_berkeley_stack.jpg" alt="laplacian stack of blended snow and uc berkeley">
+                <p>Stack of the blended image</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/2.4/berkeley_snow.jpg" alt="blended image of snow and uc berkeley">
+                <p>Final blended image</p>
+            </div>
+        </div>
+        
+        <h4>4. Conclusion</h4>
+        <p>All of the displayed results on the websites, including the Gaussian/Laplacian stacks and multiresolution blending, are implemented with color, i.e. I applied the Gaussian filter to each channel and then stacked them together for the resulting image.</p>
+        <p>The most important thing I learned from this project is image processing/transformation/manipulation through the perspective of frequency. Prior to this project, I have worked with a variety of image processing techniques such as filtering, compressing, or segmentation, but all of those methods work directly with the raw pixel value of the image. In this project, I had the opportunity to extract low and high frequency out of an image and manipulate them appropriately to produce effects that are often provided by photo editing applications such as blending images or creating hybrid images.</p>
+        
+        <footer>
+            <h2>Acknowledgements</h2>
+            <p>This project displays the results for Project 2 of CS 180 at UC Berkeley. Methods were adapted from various sources, including course staff suggestions, external libraries such as <code>scikit-image</code> and <code>numpy</code>, algorithms from <a href="https://persci.mit.edu/pub_pdfs/spline83.pdf">Burt and Adelson</a>, and the <a href="https://segment-anything.com">Segment Anything Model</a> from Meta AI to generate customized masks. </p>
+        </footer>
+    </div>
+</body>
+</html>
