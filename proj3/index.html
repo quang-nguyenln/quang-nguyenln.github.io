@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Project 3 by Quang Nguyen</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
+</head>
+<body>
+    <div class="back-button">
+        <a href="../index.html">&larr; Back to Portfolio</a>
+    </div>
+    <div class="body-container">
+        <h1>FACE MORPHING</h1>
+        <h3>Quang Nguyen, SID: 3036566521</h3>
+
+        <h4>1. Project Overview</h4>
+        <p>This project aims to build intuitions behind image warping and morphing. More specifically, I </p>
+        <ul class="actions-list">
+            <li>Produced a "morph" animation of my face into the face of George Clooney.</li>
+            <li>Computed the mean of a population of faces from the Danes dataset.</li>
+            <li>Extrapolated from the population mean to create a caricature of myself.</li>
+            <li>Performed gender swap from male to female for my face.</li>
+            <li>Used PCA basis for morphing and extrapolating.</li>
+        </ul>
+
+        <h4>2. Defining Correspoondences</h4>
+        <p>Here are the two input portraits: one is of me and the other is of <a href="https://cal-cs180.github.io/fa23/hw/proj3/george_small.jpg">George Clooney</a>. </p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/me.jpg" alt="portrait of me">
+                <p>Portrait of Quang Nguyen</p>
+            </div>
+            <div class="image-single">
+                <img src="out/george.jpg" alt="portrait of george">
+                <p>Portrait of George Clooney</p>
+            </div>
+        </div>
+        <p>Using this <a href="https://cal-cs180.github.io/fa23/hw/proj3/tool.html">labeling tool</a>, I defined 61 keypoints (including the 4 keypoints for the 4 corners), where each of them is a pair of corresonding points on the two images. These keypoints are defined using the same ordering for the two faces. Here are the Delaunay triangulations on the point sets: </p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/me_george_triangulation.jpg" alt="triangulation of me and george">
+            </div>
+        </div>
+        <p>I then computed the element-wise mean of these point sets to obtain the midway shape. Here is the Delaunay triangulation of the midway shape on the two input images:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/me_george_triangulation_average.jpg" alt="average triangulation of me and george">
+            </div>
+        </div>
+
+        <h4>3. Computing the "Mid-Way Face"</h4>
+        <p>From lecture, we define an affine transformation as follow: \[A\begin{bmatrix}
+            x \\ y \\ 1
+            \end{bmatrix} = \begin{bmatrix}
+            a & b & c\\
+            d & e & f\\
+            0 & 0 & 1
+            \end{bmatrix}\begin{bmatrix}
+            x \\ y \\ 1
+            \end{bmatrix} = \begin{bmatrix}
+            x' \\ y' \\ 1
+            \end{bmatrix}\]</p>
+        <p>Let tri1_pts and tri2_pts be the triangle points such that \(\text{tr1_pts}=\begin{bmatrix}
+            x_1 & y_1 \\ x_2 & y_2 \\ x_3 & y_3
+            \end{bmatrix}\) and \(\text{tr2_pts}=\begin{bmatrix}
+            a_1 & b_1 \\ a_2 & b_2 \\ a_3 & b_3
+            \end{bmatrix}\). Then, we can express the transformation as \[A\begin{bmatrix}
+            x_1 & x_2 & x_3\\ y_1 & y_2 & y_3 \\ 1 & 1 & 1
+            \end{bmatrix} = \begin{bmatrix}
+            a_1 & a_2 & a_3\\ b_1 & b_2 & b_3 \\ 1 & 1 & 1
+            \end{bmatrix},\]</p>
+        <p>where \(\begin{bmatrix}
+            x_1 & x_2 & x_3\\ y_1 & y_2 & y_3 \\ 1 & 1 & 1
+            \end{bmatrix} = \)<code>np.vstack((tri1_pts.T, np.ones((1, 3))))</code> and \(\begin{bmatrix}
+            a_1 & a_2 & a_3\\ b_1 & b_2 & b_3 \\ 1 & 1 & 1
+            \end{bmatrix} = \)<code>np.vstack((tri2_pts.T, np.ones((1, 3))))</code>. As a result, we can obtain the affine transformation matrix by doing <code>A = tri2_pts.dot(np.linalg.inv(tri1_pts))</code>.</p>
+        <p>With this matrix, I proceeded to compute the mid-way face by following this process:</p>
+        <ul class="actions-list">
+            <li>Compute the average shape by taking the element-wise average of the set of keypoints of the two images.</li>
+            <li>Warp both faces into that shape by computing the affine transformation matrix of each pair of triangle and warp the triangles using those matrices. For this step, I iterated over all triangles of the average shape and for each triangle, I iterated over all the possible pixels contained in that triangle using <code>skimage.draw.polygon</code> and interpolated the pixel value using a linear interpolation from <code>scipy.interpolate.RegularGridInterpolator</code>.</li>
+            <li>Average the colors of the two resulting images to obtain the final mid-war face</li>
+        </ul>
+        <p>Here is the portrait of me, the mid-way face of me, Quang Nguyen, and George Clooney, and the portrait of George Clooney:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/me.jpg" alt="portrait of me">
+                <p>Portrait of Quang Nguyen</p>
+            </div>
+            <div class="image-single">
+                <img src="out/me_george.jpg" alt="mid-way face between me and george">
+                <p>"Mid-Way" Face between Quang Nguyen and George Clooney</p>
+            </div>
+            <div class="image-single">
+                <img src="out/george.jpg" alt="portrait of george">
+                <p>Portrait of George Clooney</p>
+            </div>
+        </div>
+        <h4>4. The Morph Sequence</h4>
+        <p>Rather than using a constant ratio \(\frac{1}{2}\) for both warping and color dissolving, I generalized the previous part into the function <code>morph(im1, im2, im1_pts, im2_pts, tri, warp_frac, dissolve_frac)</code> that produces a warp between <code>im1</code> and <code>im2</code> using <code>warp_frac, dissolve_frac</code> for shape warping and color dissolving, respectively. By jointly ranging the two fractions together from 0 to 1 with a total of 45 frames through the use of <code>np.linspace(0, 1, 45)</code>, I generated video sequence of a morph from my portrait to the image of George Clooney. Here's the gif of that video sequence:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/me_george.gif" alt="video sequence of morphing from Quang Nguyen to George Clooney">
+            </div>
+        </div>
+        
+        <h4>5. The "Mean Face" of a Population</h4>
+        <p>I used the initially released subset of the IMM Face Database (i.e. the <a href="https://web.archive.org/web/20210305094647/http://www2.imm.dtu.dk/~aam/datasets/datasets.html">Danes</a> dataset). For this part, I used the entire population (37 images) rather than singling out a subpopulation. </p>
+        <p>Here is a different portrait of me that better aligns with a Dane image and contains the appropriate keypoints (similar number and in the same order) as the annotations for the Danes dataset: </p>
+        <div class="image-container">
+            <div class="image-single-40">
+                <img src="out/danes_me.jpg" alt="portrait of Quang Nguyen with corresponding keypoints with danes dataset">
+            </div>
+        </div>
+        <p>I extracted the keypoints for each Dane from the <code>.asf</code> file and for each set of points, I also appended the four corners to make the warp and morph look better. To compute the "mean" face of this popuation, I proceed as followed:</p>
+        <ul class="actions-list">
+            <li>Compute the average shape by taking the element-wise average of the sets of keypoints of the entire population.</li>
+            <li>Warp each one of the faces in the dataset to the average shape/keypoints.</li>
+            <li>Average the colors of the warped images by computing the pixel-wise average of all the warped images</li>
+        </ul>
+        <p>Here is the average face of the population:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/4/mean_face.jpg" alt="the average face of the danes dataset">
+            </div>
+        </div>
+        <p>Here are some examples of the faces in the dataset being warped into the average shape of the population:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/4/0_to_mean.jpg" alt="13_1m dane warped into the average dane">
+            </div>
+            <div class="image-single">
+                <img src="out/4/2_to_mean.jpg" alt="15_1f dane warped into the average dane">
+            </div>
+            <div class="image-single">
+                <img src="out/4/3_to_mean.jpg" alt="22_1f dane warped into the average dane">
+            </div>
+            <div class="image-single">
+                <img src="out/4/12_to_mean.jpg" alt="31_1m dane warped into the average dane">
+            </div>
+        </div>
+
+        <p>Here is the image of my face warped into the average face of the population:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/4/me_to_mean.jpg" alt="portrait of quang warped into the average dane">
+            </div>
+        </div>
+        <p>The main reason for the weird distortions in from my warped face is the misalignment of the original images and the fact that I created the keypoints from my face using a specific image from the Danes dataset rather than using the average shape and average face. As a result, the result in this part and the caricatures in the following parts will also look a little off.</p>
+        <p>Here is the image of the average face of the population warped into my geometry:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/4/mean_to_me.jpg" alt="the average dane warped into portrait of quang nguyen">
+            </div>
+        </div>
+        <p>Here, the warped average face is skinnier and the lip is also fuller, which are the two noticeable characteristics of my portrait.</p>
+
+        <h4>6. Caricatures: Extrapolating from the mean</h4>
+        <p>To extrapolate from the mean, I add the points of my face to a alpha-scaled difference between the points of my face and the points of the mean face. That is, I calculated <code>pts_average = (1 - warp_frac) * im1_pts + warp_frac * im2_pts</code>. I then warped my face into this set of points to obtain the following images:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/5/neg3_caricature.jpg" alt="caricature with alpha = -0.3">
+                <p>\(\alpha = -0.3\)</p>
+            </div>
+            <div class="image-single">
+                <img src="out/5/neg7_caricature.jpg" alt="caricature with alpha = -0.7">
+                <p>\(\alpha = -0.7\)</p>
+            </div>
+            <div class="image-single">
+                <img src="out/5/pos3_caricature.jpg" alt="caricature with alpha = 1.3">
+                <p>\(\alpha = 1.3\)</p>
+            </div>
+            <div class="image-single">
+                <img src="out/5/pos7_caricature.jpg" alt="caricature with alpha = 1.7">
+                <p>\(\alpha = 1.7\)</p>
+            </div>
+        </div>
+        <p>According to the project spec, creating caricatures might work better on a gender specific mean. As a result, I repeated the same extrapolation process and instead of using the population's mean, I used the mean of all the male in the Danes population. Here are the images that I obtained:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/5/neg3_male_caricature.jpg" alt="male caricature with alpha = -0.3">
+                <p>\(\alpha = -0.3\)</p>
+            </div>
+            <div class="image-single">
+                <img src="out/5/neg7_male_caricature.jpg" alt="male caricature with alpha = -0.7">
+                <p>\(\alpha = -0.7\)</p>
+            </div>
+            <div class="image-single">
+                <img src="out/5/pos3_male_caricature.jpg" alt="male caricature with alpha = 1.3">
+                <p>\(\alpha = 1.3\)</p>
+            </div>
+            <div class="image-single">
+                <img src="out/5/pos7_male_caricature.jpg" alt="male caricature with alpha = 1.7">
+                <p>\(\alpha = 1.7\)</p>
+            </div>
+        </div>
+        <p>The caricatures obtained from the two population look the same for a specific value of \(\alpha\), but if we look closely, the ones obtained from using the average of the male population are little shorter than the corresponding ones from the average of the entire population. This is because the average male face is shorter than the average face of the whole population.</p>
+
+        <h4>7. Bells and Whistles</h4>
+        <h5>7.1. Swapping Gender</h5>
+        <p>I first computed the average face of the female population from the Danes dataset. Here are the three images of just shape warping, just color cross-dissolving, and both: </p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/6/female_me_morph.jpg" alt="female me morph">
+                <p>Only shape warping, obtained by warping my face to the geometry of the geometry of the average female face.</p>
+            </div>
+            <div class="image-single">
+                <img src="out/6/female_me_dissolve.jpg" alt="female me dissolve">
+                <p>Only cross-dissolving, obtained by warping the average female face to the geometry of my face and then taking the average colors with my face.</p>
+            </div>
+            <div class="image-single">
+                <img src="out/6/female_me_both.jpg" alt="female me both">
+                <p>Combining both shape warping and cross-dissolving, using the <code>morph</code> function from Part 3.</p>
+            </div>
+        </div>
+        <p>As evident from the images, combining both warping and cross-dissolving produces the best and most natural result. Although using cross-dissolving by itself produces a nice color, the resulting shape is not consistent with that of the average female face. </p>
+        
+        <h5>7.2. PCA </h5>
+        <p>I computed the PCA basis for the Danes dataset using <code>sklearn.decomposition.PCA</code>. Here are the first 9 components/eigenfaces of the PCA basis of the Danes dataset:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/6/eigenfaces.jpg" alt="first 9 eigenfaces of Danes dataset">
+            </div>
+        </div>
+        <p>I tried reconstructing the original images using the first <code>k</code> components from the PCA basis:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <p>Reconstruction of Image 0:</p>
+                <img src="out/6/recon_image0.jpg" alt="recon 0 with varied k">
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <p>Reconstruction of Image 1:</p>
+                <img src="out/6/recon_image1.jpg" alt="recon 1 with varied k">
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <p>Reconstruction of Image 2:</p>
+                <img src="out/6/recon_image2.jpg" alt="recon 2 with varied k">
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/6/recon_image2c.jpg" alt="recon 2 with varied k">
+            </div>
+        </div>
+        <p>Notice that for the majority of images, using the first 25 principal components is often sufficient to retrieve a coherent and detailed image. However, for some images, such as Image 2, we need to use more than 25 (35 in the case of Image 2) eigenfaces to have a decent-quality reconstruction.</p>
+        <p>Here is the mean of the PCA basis that I will use to perform interpolations and extrapolations:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/6/pca_mean.jpg" alt="pca mean">
+            </div>
+        </div>
+        <p>By computing the PCA basis of the set of keypoints, I obtained <code>label_mean</code>, the mean of the PCA basis of all the labels. Using this, I was able to yield the following images: </p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/6/pca_mean_to_me.jpg" alt="pca mean to me">
+                <p>Warping the PCA mean face to my geometry</p>
+            </div>
+            <div class="image-single">
+                <img src="out/6/me_to_pca_mean.jpg" alt="me to pca mean">
+                <p>Warping my face to the average geometry of the PCA basis</p>
+            </div>
+            <div class="image-single">
+                <img src="out/6/pos_caricature.jpg" alt="male caricature with alpha = 1.5">
+                <p>Caricature with \(\alpha = 1.5\)</p>
+            </div>
+            <div class="image-single">
+                <img src="out/6/neg_caricature.jpg" alt="caricature with alpha = -0.5">
+                <p>Caricature with \(\alpha = -0.5\)</p>
+            </div>
+        </div>
+        <p>Aside from the image of warping the PCA mean face to my geometry, which is blurry since the original PCA mean face is also not refined, the remaining images are similar to those computed in the normal basis, primarily because <code>label_mean</code> and the average shape in the normal basis is quite similar. </p>
+        <p>Here's the image of my face warped and cross-dissolved with the PCA mean face:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/6/pca_mean_me_both.jpg" alt="pca mean me both">
+                <p>My face warped and cross-dissolved with the PCA mean face</p>
+            </div>
+            <div class="image-single">
+                <img src="out/4/me_to_mean.jpg" alt="portrait of quang warped into the average dane">
+                <p>Result of Part 4</p>
+            </div>
+        </div>
+        <p>In this case, the result from using the PCA basis is much better than the one computed under the normal basis since the left image is less distorted and looks more natural.</p>
+        <p>I also attemped to perform a gender swap by computing a PCA basis for all the females in the Danes dataset. </p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/6/pca_female_mean_me_both.jpg" alt="pca female mean me both">
+                <p>My face warped and cross-dissolved with the PCA mean faceof the female population</p>
+            </div>
+            <div class="image-single">
+                <img src="out/6/female_me_both.jpg" alt="female me both">
+                <p>Previous Result</p>
+            </div>
+        </div>
+        <p>For the gender swap, the two images look pretty similar with some minor differences: the face in the right image is a little wider and there's less artifact in the right image. In this situation, using the normal basis yields comparatively better results than using the PCA basis.</p>
+        <footer>
+            <h2>Acknowledgements</h2>
+            <p>This project displays the results for Project 3 of CS 180 at UC Berkeley. Methods were adapted from various sources, including course staff suggestions and external libraries such as <code>scikit-image</code> and <code>numpy</code>.</p>
+        </footer>
+    </div>
+</body>
+</html>
