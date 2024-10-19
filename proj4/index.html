@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Project 3 by Quang Nguyen</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
+</head>
+<body>
+    <div class="back-button">
+        <a href="../index.html">&larr; Back to Portfolio</a>
+    </div>
+    <div class="body-container">
+        <h1>IMAGE WARPING AND MOSAICING</h1>
+        <h3>Quang Nguyen, SID: 3036566521</h3>
+
+        <h4>1. Project Overview</h4>
+        <p>This project aims to build intuitions behind image warping and mosaicing. More specifically, I </p>
+        <ul class="actions-list">
+            <li>Shot and digitized pictures.</li>
+            <li>Receovered homographies for projective warping.</li>
+            <li>Warped images.</li>
+            <li>Blended images into a mosaic by resampling and compositing them</li>
+        </ul>
+
+        <h4>2. Shoot The Pictures</h4>
+        <p>Here are the series of pictures that I took to blend into mosaics: </p>
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/input/room1.jpg" alt="my room 1">
+                </div>
+                <div class="image-single">
+                    <img src="out/input/room2.jpg" alt="my room 2">
+                </div>
+            </div>
+            <div class="caption">
+                <p>Photos of my room</p>
+            </div>
+        </div>
+        
+        
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/input/gateway1.jpg" alt="gateway construction 1">
+                </div>
+                <div class="image-single">
+                    <img src="out/input/gateway2.jpg" alt="gateway construction 2">
+                </div>
+            </div>
+            <div class="caption">
+                <p>Photos of the construction of the new Gateway building</p>
+            </div>
+        </div>
+
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/input/soda2.jpg" alt="6th floor soda 1">
+                </div>
+                <div class="image-single">
+                    <img src="out/input/soda3.jpg" alt="6th floor soda 2">
+                </div>
+            </div>
+            <div class="caption">
+                <p>Photos of 6th floor of Soda Hall</p>
+            </div>
+        </div>
+
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/input/common1.jpg" alt="common room 1">
+                </div>
+                <div class="image-single">
+                    <img src="out/input/common2.jpg" alt="common room 2">
+                </div>
+                <div class="image-single">
+                    <img src="out/input/common3.jpg" alt="common room 3">
+                </div>
+            </div>
+            <div class="caption">
+                <p>Photos of the common room of my apartment</p>
+            </div>
+        </div>
+
+        <div class="image-container-caption">   
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/input/anchor1.jpg" alt="anchor house 1">
+                </div>
+                <div class="image-single">
+                    <img src="out/input/anchor2.jpg" alt="anchor house 2">
+                </div> 
+            </div>
+            <div class="caption">
+                <p>Photos of the Helen Diller Anchor House before sunrise</p>
+            </div>
+        </div>
+
+        <h4>3. Recover Homographies</h4>
+        <p>From lecture, we define an projective transformation using a homography matrix as follow: 
+            \[H\mathbf{p} = \mathbf{p'}\]
+            \[\begin{bmatrix}
+            a & b & c\\
+            d & e & f\\
+            g & h & 1
+            \end{bmatrix}\begin{bmatrix}
+            x \\ y \\ 1
+            \end{bmatrix} = \begin{bmatrix}
+            x' \\ y' \\ 1
+            \end{bmatrix}\]</p>
+        <p>Exapnding this matrix multiplication out, we get the following system of equations: 
+            \[
+            \begin{cases}
+                ax + by + c = x' \\
+                dx + ey + f = y' \\
+                gx + hy + 1 = 1
+            \end{cases} \Rightarrow 
+            \begin{cases}
+                ax + by + c - gxx' - hyx' = x' \\
+                dx + ey + f - gxy' - hyy' = y' 
+            \end{cases}
+            \]
+        </p>
+        <p> Rewriting the system of equations as matrix multiplication, we obtain
+            \[\begin{bmatrix}
+            x & y & 1 & 0 & 0 & 0 & -xx' & -yx'\\
+            0 & 0 & 0 & x & y & 1 & -xy' & -yy'
+            \end{bmatrix}\begin{bmatrix}
+            a \\ b \\ c \\ d \\ e \\ f \\ g \\ h
+            \end{bmatrix} = \begin{bmatrix}
+            x' \\ y'
+            \end{bmatrix}
+            \]
+        </p>
+        <p>Since each point gives up two equations and we need at least 4 equations to solve for \(H\), we need at least 4 correspondence points and the matrix multiplication becomes
+            \[\begin{bmatrix}
+            x_1 & y_1 & 1 & 0 & 0 & 0 & -x_1x_1' & -y_1x_1' \\
+            0 & 0 & 0 & x_1 & y_1 & 1 & -x_1y_1' & -y_1y_1' \\
+            x_2 & y_2 & 1 & 0 & 0 & 0 & -x_2x_2' & -y_2x_2' \\
+            0 & 0 & 0 & x_2 & y_2 & 1 & -x_2y_2' & -y_2y_2' \\
+            x_3 & y_3 & 1 & 0 & 0 & 0 & -x_3x_3' & -y_3x_3' \\
+            0 & 0 & 0 & x_3 & y_3 & 1 & -x_3y_3' & -y_3y_3' \\
+            x_4 & y_4 & 1 & 0 & 0 & 0 & -x_4x_4' & -y_4x_4' \\
+            0 & 0 & 0 & x_4 & y_4 & 1 & -x_4y_4' & -y_4y_4' \\
+            \end{bmatrix}\begin{bmatrix}
+            a \\ b \\ c \\ d \\ e \\ f \\ g \\ h
+            \end{bmatrix} = \begin{bmatrix}
+            x_1' \\ y_1' \\ x_2' \\ y_2' \\ x_3' \\ y_3' \\ x_4' \\ y_4'
+            \end{bmatrix}
+            \]
+        </p>
+        <p>Since I used more than 4 correspondence points (on averaged, I had about 14 correspondence points for each pair of images), the system of equation will be overconstrained. As a result, I used <code>np.linalg.lstsq</code> to solve for least squares solution. I then just reorganized the entries from the least squares vector to obtain an approximate \(H\).</p>
+        
+        <h4>4. Warp the Images</h4>
+        <p>Given an image to be warped <code>im</code> and a homography matrix \(H\), I warp the image as follow:</p>
+        <ul class="actions-list">
+            <li>Compute the bounding box in the resulting image by applying the homography matrix onto the four corners to <code>im</code>. This gives the polygon where the projected <code>im</code> will be in the resulting warped image.</li>
+            <li>Compute the corresponding pixels in the original <code>im</code> for each pixel in the resulting image by applying the inverse of the homography matrix to each pixel of the resulting image (inverse warping guarantees the smoothness in the resulting image).</li>
+            <li>Interpolate the pixels values using <code>scipy.interpolate.griddata</code> to obtain the final warped resulting image.</li>
+        </ul>
+        
+        <h4>5. Image Rectification</h4>
+        <p>To rectify an image, I completed the following steps:</p>
+        <ul class="actions-list">
+            <li>Define 4 correspondence points using a known rectangular object in the image</li>
+            <li>Determine the height-to-width ratio of the object and use that to define the size of the ground plane rectification</li>
+            <li>Compute the homography matrix and use that with <code>warpImage</code> from the previous part to recover the original data</li>
+        </ul>
+        <p>Here are some results of me applying rectification on different rectangular objects/surfaces:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/rectify/rec1.jpg" alt="rectified image of a monitor">
+                <p>Rectification of my monitor</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/rectify/rec2.jpg" alt="rectified image of a laptop">
+                <p>Rectification of my laptop</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/rectify/rec3.jpg" alt="rectified image of a book">
+                <p>Rectification of a book</p>
+            </div>
+        </div>
+        
+        <h4>6. Blend the images into a mosaic</h4>
+        <p>To blend two images together, I completed the following procedure:</p>
+        <ul class="actions-list">
+            <li>Computed the homography matrix between the two images and warp one image using the other as a reference.</li>
+            <li>Depending on the placement of the warped image (left, right, above, or below) of the reference image, computed the shape of the final mosaic.</li>
+            <li>Aligned the images onto the mosaic appropriately using the offsets output from the warping.</li>
+            <li>Computed a distance metric using <code>scipy.ndimage.distance_transform_edt</code> for each image and created a mask where a pixel value is 1 if the distance metric for that pixel is greater for the warped image and 0 otherwise.</li>
+            <li>Blended the two images together using a two-level Laplacian pyramid (similar to Project 2).</li>
+        </ul>
+
+        <p>To blend three images together where the center image is chosen to be the reference image, I completed the following procedure:</p>
+        <ul class="actions-list">
+            <li>Computed the shape of the final mosaic using the offsets output from warping the left and right images into the center image.</li>
+            <li>Blended the left and the center images together using the aforementioned process to create a temporary mosaic.</li>
+            <li>Blended this temporary mosaic and the right image together using the aforementioned process.</li>
+        </ul>
+
+        <p>Notice that the color a little off in some of the blended mosaics because the lighting conditions of the input images weren't consistent (also potentially because iPhone camera automatically adjusts the focus and exposure of the photos).</p>
+        <p>Here are the results of blending the images into a mosaic where for each group of images, the first row contains the input images and the second row displays the resulting warped and blended image:</p>
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/input/room1.jpg" alt="my room 1">
+                </div>
+                <div class="image-single">
+                    <img src="out/input/room2.jpg" alt="my room 2">
+                </div>
+            </div>
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/mosaics/room.jpg" alt="warped and blended image of my room">
+                </div>
+            </div>
+            <div class="caption">
+                <p>My Room</p>
+            </div>
+        </div>
+        
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/input/gateway1.jpg" alt="the gateway 1">
+                </div>
+                <div class="image-single">
+                    <img src="out/input/gateway2.jpg" alt="the gateway 2">
+                </div>
+            </div>
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/mosaics/gateway.jpg" alt="warped and blended image of the gateway">
+                </div>
+            </div>
+            <div class="caption">
+                <p>The Construction of the Gateway</p>
+            </div>
+        </div>
+
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/input/soda2.jpg" alt="6th floor soda 1">
+                </div>
+                <div class="image-single">
+                    <img src="out/input/soda3.jpg" alt="6th floor soda 2">
+                </div>
+            </div>
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/mosaics/soda.jpg" alt="warped and blended image of 6th floor of soda">
+                </div>
+            </div>
+            <div class="caption">
+                <p>6th Floor of Soda Hall</p>
+            </div>
+        </div>
+
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/input/common1.jpg" alt="common room 1">
+                </div>
+                <div class="image-single">
+                    <img src="out/input/common2.jpg" alt="common room 2">
+                </div>
+                <div class="image-single">
+                    <img src="out/input/common3.jpg" alt="common room 3">
+                </div>
+            </div>
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/mosaics/common.jpg" alt="warped and blended image of common room">
+                </div>
+            </div>
+            <div class="caption">
+                <p>The Common Room of my Apartment</p>
+            </div>
+        </div>
+
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/input/anchor1.jpg" alt="anchor house 1">
+                </div>
+                <div class="image-single">
+                    <img src="out/input/anchor2.jpg" alt="anchor house 2">
+                </div> 
+            </div>
+            <div class="image_row">
+                <div class="image-single">
+                    <img src="out/mosaics/anchor.jpg" alt="warped and blended image of the anchor house">
+                </div>
+            </div>
+            <div class="caption">
+                <p>Helen Diller Anchor House before Sunrise</p>
+            </div>
+        </div>
+
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/input/bampfa1.jpg" alt="bampfa 1">
+                </div>
+                <div class="image-single">
+                    <img src="out/input/bampfa2.jpg" alt="bampfa 2">
+                </div> 
+            </div>
+            <div class="image_row">
+                <div class="image-single">
+                    <img src="out/mosaics/bampfa.jpg" alt="warped and blended image of bampfa">
+                </div>
+            </div>
+            <div class="caption">
+                <p>Berkeley Art Museum and Pacific Film Archive before Sunrise</p>
+            </div>
+        </div>
+        
+        <footer>
+            <h2>Acknowledgements</h2>
+            <p>This project displays the results for Project 4 of CS 180 at UC Berkeley. Methods were adapted from various sources, including course staff suggestions and external libraries such as <code>scikit-image</code> and <code>numpy</code>.</p>
+        </footer>
+    </div>
+</body>
+</html>
