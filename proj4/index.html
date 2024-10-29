@@ -11,19 +11,28 @@
         <a href="../index.html">&larr; Back to Portfolio</a>
     </div>
     <div class="body-container">
-        <h1>IMAGE WARPING AND MOSAICING</h1>
+        <h1>[AUTO]STITCHING PHOTO MOSAICS</h1>
         <h3>Quang Nguyen, SID: 3036566521</h3>
 
-        <h4>1. Project Overview</h4>
-        <p>This project aims to build intuitions behind image warping and mosaicing. More specifically, I </p>
+        <h4>Project Overview</h4>
+        <p>This project aims to build intuitions behind the creation of a large composite image by stitching together photographs. More specifically, in the first part of the project, I </p>
         <ul class="actions-list">
             <li>Shot and digitized pictures.</li>
-            <li>Receovered homographies for projective warping.</li>
+            <li>Recovered homographies for projective warping.</li>
             <li>Warped images.</li>
             <li>Blended images into a mosaic by resampling and compositing them</li>
         </ul>
+        <p>In the second part, I automated the correspondence-determination process in Part 1 so that I can automatically stitch images together to create panoramas. That is, I:</p>
+        <ul class="actions-list">
+            <li>Detected evenly spread-out Harris corners/interest points in an image with adaptive non-maximal suppression.</li>
+            <li>Extracted feature descriptors from the corners and matched the descriptors between two images.</li>
+            <li>Computed the homography matrix between two images with RANSAC</li>
+            <li>Blended images into a mosaic by resampling and compositing them using the resulting homography.</li>
+        </ul>
 
-        <h4>2. Shoot The Pictures</h4>
+        <h2>PART A: IMAGE WARPING AND MOSAICING</h2>
+
+        <h4>1. Shoot The Pictures</h4>
         <p>Here are the series of pictures that I took to blend into mosaics: </p>
         <div class="image-container-caption">
             <div class="image-row">
@@ -99,7 +108,21 @@
             </div>
         </div>
 
-        <h4>3. Recover Homographies</h4>
+        <div class="image-container-caption">   
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/input/bampfa1.jpg" alt="bampfa 1">
+                </div>
+                <div class="image-single">
+                    <img src="out/input/bampfa2.jpg" alt="bampfa 2">
+                </div> 
+            </div>
+            <div class="caption">
+                <p>Photos of the Berkeley Art Museum and Pacific Film Archive (BAMPFA) before sunrise</p>
+            </div>
+        </div>
+
+        <h4>2. Recover Homographies</h4>
         <p>From lecture, we define an projective transformation using a homography matrix as follow: 
             \[H\mathbf{p} = \mathbf{p'}\]
             \[\begin{bmatrix}
@@ -154,7 +177,7 @@
         </p>
         <p>Since I used more than 4 correspondence points (on averaged, I had about 14 correspondence points for each pair of images), the system of equation will be overconstrained. As a result, I used <code>np.linalg.lstsq</code> to solve for least squares solution. I then just reorganized the entries from the least squares vector to obtain an approximate \(H\).</p>
         
-        <h4>4. Warp the Images</h4>
+        <h4>3. Warp the Images</h4>
         <p>Given an image to be warped <code>im</code> and a homography matrix \(H\), I warp the image as follow:</p>
         <ul class="actions-list">
             <li>Compute the bounding box in the resulting image by applying the homography matrix onto the four corners to <code>im</code>. This gives the polygon where the projected <code>im</code> will be in the resulting warped image.</li>
@@ -162,7 +185,7 @@
             <li>Interpolate the pixels values using <code>scipy.interpolate.griddata</code> to obtain the final warped resulting image.</li>
         </ul>
         
-        <h4>5. Image Rectification</h4>
+        <h4>4. Image Rectification</h4>
         <p>To rectify an image, I completed the following steps:</p>
         <ul class="actions-list">
             <li>Define 4 correspondence points using a known rectangular object in the image</li>
@@ -189,7 +212,7 @@
             </div>
         </div>
         
-        <h4>6. Blend the images into a mosaic</h4>
+        <h4>5. Blend the images into a mosaic</h4>
         <p>To blend two images together, I completed the following procedure:</p>
         <ul class="actions-list">
             <li>Computed the homography matrix between the two images and warp one image using the other as a reference.</li>
@@ -324,10 +347,141 @@
                 <p>Berkeley Art Museum and Pacific Film Archive before Sunrise</p>
             </div>
         </div>
-        
+
+        <h2>PART B: FEATURE MATCHING FOR AUTOSTITCHING</h2>
+        <h4>1. Harris Corner Detection</h4>
+        <p>To identify all the corners/interest points of an image, I used the <a href="https://inst.eecs.berkeley.edu/~cs180/fa24/hw/proj4/harris.py">functions</a> provided by course staff, which outputs a list of coordinates with higher corner strength than their immediate neighbors. Notice that without further filtering, there are too many possible candidates for Harris corners, which is too computationally inefficient to work with. Here are the Harris corners on two example images:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/steps/harris_sodas.jpg" alt="harris corners of images of soda hall">
+                <p>Images of Soda Hall with labeled Harris Corners</p>
+            </div>
+        </div>
+        <h4>2. Adaptive Non-Maximal Suprression</h4>
+        <p>I then impletemed Adaptive Non-Maximal Suppression on the list of Harris corners, which restricted the maximum number of interest points and ensured that the resulting points are spatially well distributed over the input image. Here are the remaining keypoints after ANMS: </p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/steps/ans_sodas.jpg" alt="harris corners of images of soda hall with anms">
+                <p>Images of Soda Hall with labeled Harris Corners after ANMS</p>
+            </div>
+        </div>
+        <h4>3. Feature Descriptor Extraction</h4>
+        <p>To extract features from each Harris corner after ANMS, I extracted axis-aligned 40x40 patches and downsampled them with <code>anti_aliasing=True</code> to obtain 8x8 feature patches and avoid aliasing. I then normalized the descriptors to ensure that their mean is 0 and their variance is 1. Here are some examples of the feature descriptors of an image of Soda Hall:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/steps/features_sodas.jpg" alt="some feature descriptors of an image of soda hall">
+                <p>Examples of feature descriptors of an image of Soda Hall</p>
+            </div>
+        </div>
+        <h4>4. Feature Matching</h4>
+        <p>To match the features, I first flattened them from 8x8 patches to 64-dimensional vectors. I computed the Euclidean distance between each vector in the first descriptor and all vectors in the second descriptor to obtain a list of <code>distances</code>. I then sorted this list in ascending order to retrieve the distance of the 1-NN and 2-NN and used Lowe's technique to determine matches: If the ratio of 1-NN over 2-NN is below the threshold <code>threshold</code>, then the 1-NN is considered to be a match. Here are the matched features between two images of Soda Hall:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/steps/fmatch_lines_sodas.jpg" alt="feature matches with threshold 0.5">
+                <p>Feature matches with threshold \(t=0.5\)</p>
+            </div>
+        </div>
+        <h4>5. RANSAC</h4>
+        <p>Even after using Lowe's technique to reduce the number of outliers, there remains inaccurate pair of correspondence points, mainly due to the fact that Euclidean distance, or least-squares, is still vulnerable to outliers. As a result, I implemented RANSAC as followed:</p>
+        <ul class="actions-list">
+            <li>Initialize an empty list that will contain the best correspondence points</li>
+            <li>Randomly sample 4 pairs of points and compute the homography matrix between the two set of points using the function <code>computeH</code> from part A</li>
+            <li>Transform all the points of one image to the other using the homography matrix. Compute the Euclidean distance between the transformed points and the ground truth points. If the distance between a pair is less than <code>epsilon</code>, add that pair of points to the list of inliers. If the list of inliers for this homography has greater size than the current list of best correspondence points, set this to be the list of best correspondence points. </li>
+            <li>Repeat this process <code>num_times</code> times and output the resulting list of best correspondence points</li>
+        </ul>
+        <p>Here is the result of running RANSAC on the set of matched features from Lowe's technique:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/steps/ransac_lines_sodas.jpg" alt="feature matches with threshold 0.5 after ransac">
+                <p>Feature matches with threshold \(t=0.5\) after RANSAC</p>
+            </div>
+        </div>
+        <h4>6. Results and Comparisons</h4>
+        <p>Here are the automatically and manually stitched results side by side for comparison:</p>
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/robust_mosaics/room.jpg" alt="auto warped and blended image of my room">
+                    <p>Automatically stitched image of my room</p>
+                </div>
+                <div class="image-single">
+                    <img src="out/mosaics/room.jpg" alt="manual warped and blended image of my room">
+                    <p>Manually stitched image of my room</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/robust_mosaics/gateway.jpg" alt="auto warped and blended image of gateway">
+                    <p>Automatically stitched image of the construction of the Gateway</p>
+                </div>
+                <div class="image-single">
+                    <img src="out/mosaics/gateway.jpg" alt="manual warped and blended image of gateway">
+                    <p>Manually stitched image of the construction of the Gateway</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/robust_mosaics/soda.jpg" alt="auto warped and blended image of soda hall">
+                    <p>Automatically stitched image of the 6th floor of Soda Hall</p>
+                </div>
+                <div class="image-single">
+                    <img src="out/mosaics/soda.jpg" alt="manual warped and blended image of soda hall">
+                    <p>Manually stitched image of the 6th floor of Soda Hall</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/robust_mosaics/common.jpg" alt="auto warped and blended image of common room">
+                <p>Automatically stitched image of the 6th floor of my apartment's common room</p>
+                </div>
+                <div class="image-single">
+                    <img src="out/mosaics/common.jpg" alt="manual warped and blended image of common room">
+                    <p>Manually stitched image of the 6th floor of my apartment's common room</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/robust_mosaics/anchor.jpg" alt="auto warped and blended image of the anchor house">
+                    <p>Automatically stitched image of Helen Diller Anchor House before sunrise</p>
+                </div>
+                <div class="image-single">
+                    <img src="out/mosaics/anchor.jpg" alt="manual warped and blended image of the anchor house">
+                    <p>Manually stitched image of Helen Diller Anchor House before sunrise</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/robust_mosaics/bampfa.jpg" alt="auto warped and blended image of bampfa">
+                    <p>Automatically stitched image of BAMPFA before sunrise</p>
+                </div>
+                <div class="image-single">
+                    <img src="out/mosaics/bampfa.jpg" alt="manual warped and blended image of bampfa">
+                    <p>Manually stitched image of BAMPFA before sunrise</p>
+                </div>
+            </div>
+        </div>
+        <p>We notice that both automatically and manually mosaics yield pretty similar results, illustrating the robustness of the involved algorithms such as Harris corners, ANMS, or RANSAC.</p>
+        <h4>7. What have I learned?</h4>
+        <p>The coolest things I have learned from this project are rectification and automatic stitching through feature descriptors extraction and matching. After project 3 and course lectures, I was already intrigued by the extended application of linear algebra in warping one shape into another. While working on this project, I was particularly surprised and amazed by how much we could stretch the image with the homography matrix to accurately rectify a rectangular surface without encountering aliasing problems even when the surface is extremely skewed. </p>
+        <p>Similarly, from project 3 to project 4A, the typical procedure of determining the transformation matrix given two images includes manually defining correspondence points through a mouse-clicking interface, which involves a decent amount of tedious work, and recovering the transformation matrix using the <code>numpy</code> library. This procedure is effectively and sufficiently automated in project 4B, where I implemented interest point detection with Harris corners and ANMS, feature descriptor extraction with Gaussian blurring, and robust feature matching with Lowe's technique and RANSAC. Thanks to this much needed automation, I was able explore mosaicing images with fewer corners (I didn't include results for these images in this writeup).</p>
         <footer>
             <h2>Acknowledgements</h2>
-            <p>This project displays the results for Project 4 of CS 180 at UC Berkeley. Methods were adapted from various sources, including course staff suggestions and external libraries such as <code>scikit-image</code> and <code>numpy</code>.</p>
+            <p>This project displays the results for Project 4 of CS 180 at UC Berkeley. Methods were adapted from various sources, including course staff suggestions, algorithms from <a href="https://inst.eecs.berkeley.edu/~cs180/fa24/hw/proj4/Papers/MOPS.pdf">Brown et al.</a>, and external libraries such as <code>scikit-image</code> and <code>numpy</code></p>
         </footer>
     </div>
 </body>
