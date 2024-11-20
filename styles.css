@@ -137,6 +137,13 @@ p {
     margin-right: 8px;
 }
 
+.image-single-lr {
+    width: 100%;
+    text-align: center;
+    transition: transform 0.3s;
+    margin-left: 8px;
+    margin-right: 8px;
+}
 
 .button-container {
     display: flex;
@@ -169,7 +176,21 @@ p {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.image-single-lr img {
+    width: 50%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    object-fit: cover;
+}
+
 .image-single p {
+    text-align: center;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.image-single-lr p {
     text-align: center;
     margin-top: 0px;
     margin-bottom: 0px;
@@ -181,6 +202,11 @@ p {
     border-radius: 20px;
 }
 
+.image-single-lr:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 8px rgba(189, 156, 156, 0.2);
+    border-radius: 20px;
+}
 
 .image-single-40 {
     width: 100%;

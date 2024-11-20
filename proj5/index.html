@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Project 5 by Quang Nguyen</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
+</head>
+<body>
+    <div class="back-button">
+        <a href="../index.html">&larr; Back to Portfolio</a>
+    </div>
+    <div class="body-container">
+        <h1>FUN WITH DIFFUSION MODELS!</h1>
+        <h3>Quang Nguyen, SID: 3036566521</h3>
+
+        <h4>Project Overview</h4>
+        <p>In this project, I implemented and deployed diffusion models for image generation. In part A, I:</p>
+        <ul class="actions-list">
+            <li>Played around with diffusion models.</li>
+            <li>Implemented diffusion sampling loops and used them for inpainting and creating optical illusions.</li>
+        </ul>
+        <p>In part B, I trained my own unconditional, time-conditioned, and class-conditioned UNet-based diffusion model on MNIST.</p>
+
+        <h2>PART A: THE POWER OF DIFFUSION MODELS!</h2>
+
+        <h4>0. Setup and Sampling from the Model</h4>
+        <p>Throughout this part and the subsequent parts, the random seed that I used is <code>19722002</code>.</p>
+        <p>Here are the stage 1 outputs:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/0/64snowymountain.png" alt="an oil painting of a snowy mountain village">
+                <p>an oil painting of a snowy mountain village</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/0/64hatman.png" alt="a man wearing a hat">
+                <p>a man wearing a hat</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/0/64rocketship.png" alt="a rocket ship">
+                <p>a rocket ship</p>
+            </div>
+        </div>
+        <p>Here are the stage 2 outputs:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/0/256snowymountain.png" alt="an oil painting of a snowy mountain village">
+                <p>an oil painting of a snowy mountain village</p>
+            </div>
+            <div class="image-single">
+                <img src="out/0/256hatman.png" alt="a man wearing a hat">
+                <p>a man wearing a hat</p>
+            </div>
+            <div class="image-single">
+                <img src="out/0/256rocketship.png" alt="a rocket ship">
+                <p>a rocket ship</p>
+            </div>
+        </div>
+        <p>For the prompt <code>'an oil painting of a snowy mountain village'</code>, the output image is pretty accurate: it illustrates an oil painting where the main subject is a village located on a snowy mountain. There are also two human figures walking in the middle of the image, probably due to the fact that the word <code>'village'</code> is correlated/associated with human. Similarly, the prompt <code>'a man wearing a hat'</code> also outputs a relevant image of a realistic man wearing a hat. The image is zoomed in to focus on the man's face and the hat; Interestingly, the man is also pointing to the hat, emphasizing the word <code>'hat'</code> from the prompt. Despite having a rocket ship as the center, the output image for the prompt <code>'a rocket ship'</code> is less accurate as the rocket ship looks too much like a cartoon and is not as realistic as one would expect from the prompt. All in all, 20 inference steps seem sufficient to generate outputs that are expected from the text prompts although there still exists some inaccuracies in the final images.</p>
+        
+        <p>Here are the images from the prompt <code>'a man wearing a hat'</code> with different number of inference steps:</p>
+        <div class="image-container-caption">
+            <div class="caption">
+                <p>Stage 1 outputs</p>
+            </div>
+            <div class="image-row">
+                <div class="image-single-lr">
+                    <img src="out/0/64hatman.png" alt="a man wearing a hat">
+                    <p><code>num_inference_steps = 20</code></p>
+                    <p>(default)</p>
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/0/64hatman10.png" alt="a man wearing a hat">
+                    <p><code>num_inference_steps = 10</code></p>
+                    <p>(fewer steps)</p>
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/0/64hatman40.png" alt="a man wearing a hat">
+                    <p><code>num_inference_steps = 40</code></p>
+                    <p>(more steps)</p>
+                </div>
+            </div>
+        </div>
+        <div class="image-container-caption">
+            <div class="caption">
+                <p>Stage 2 outputs</p>
+            </div>
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/0/256hatman.png" alt="a man wearing a hat">
+                    <p><code>num_inference_steps = 20</code></p>
+                    <p>(default)</p>
+                </div>
+                <div class="image-single">
+                    <img src="out/0/256hatman10.png" alt="a man wearing a hat">
+                    <p><code>num_inference_steps = 10</code></p>
+                    <p>(fewer steps)</p>
+                </div>
+                <div class="image-single">
+                    <img src="out/0/256hatman40.png" alt="a man wearing a hat">
+                    <p><code>num_inference_steps = 40</code> </p>
+                    <p>(more steps)</p>
+                </div>
+            </div>
+        </div>
+        <p>For this prompt, we notice that the more number of inteference steps we have, the more zoomed and focused into the man's face wearing a hat the output image becomes. That is, when we only have 10 inference steps, the outputu does show a man with a hat but they are a little blurry, especially the left half of his face and the top of the hat. When we increase to 20 steps, the output becomes a half-body image that places more emphasis on the man  but the hat is half-cropped. Finally, when we use 40 steps, the ouput is a portrait that fully focuses on the man's face and the hat is more defined.</p>
+
+        <p>Here are the images from the prompt <code>'a rocket ship'</code> with different number of inference steps:</p>
+        <div class="image-container-caption">
+            <div class="caption">
+                <p>Stage 1 outputs</p>
+            </div>
+            <div class="image-row">
+                <div class="image-single-lr">
+                    <img src="out/0/64rocketship.png" alt="a rocket ship">
+                    <p><code>num_inference_steps = 20</code></p>
+                    <p>(default/before)</p>
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/0/64rocketship10.png" alt="a rocket ship">
+                    <p><code>num_inference_steps = 10</code></p>
+                    <p>(fewer steps)</p>
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/0/64rocketship40.png" alt="a rocket ship">
+                    <p><code>num_inference_steps = 40</code></p>
+                    <p>(more steps)</p>
+                </div>
+            </div>
+        </div>
+        <div class="image-container-caption">
+            <div class="caption">
+                <p>Stage 2 outputs</p>
+            </div>
+            <div class="image-row">
+                <div class="image-single">
+                    <img src="out/0/256rocketship.png" alt="a rocket ship">
+                    <p><code>num_inference_steps = 20</code></p>
+                    <p>(default/before)</p>
+                </div>
+                <div class="image-single">
+                    <img src="out/0/256rocketship10.png" alt="a rocket ship">
+                    <p><code>num_inference_steps = 10</code></p>
+                    <p>(fewer steps)</p>
+                </div>
+                <div class="image-single">
+                    <img src="out/0/256rocketship40.png" alt="a rocket ship">
+                    <p><code>num_inference_steps = 40</code> </p>
+                    <p>(more steps)</p>
+                </div>
+            </div>
+        </div>
+        <p>For this prompt, a similar trend also exists: using fewer inference steps produces output images that is less focused on the intended object/subject of the prompt. Another thing that we notice here is that when the number of inference steps is low, the resulting output is somewhat less realistic. That is, if we only use 10 steps, then the rocket ship is not fully drawn out (i.e. some details in the bottom are missing) and the image is not fully focused on the object (i.e. the ship is on the left of the image instead of being in the center). If we compare the output from using 20 steps and 40 steps, the 20-step result looks unrealisitic and cartoon-ish while the rocket and the fire from the thruster look significantly more representational and naturalistic.</p>
+
+        <h4>1.1. Implementing the Forward Process</h4>
+        <p>For this part, I obtained <code>alpha_cumprod</code> by indexing the given <code>alphas_cumprod</code> and <code>epsilon</code> using <code>torch.rand_like</code>. Here are the noisy versions of the test image at different timesteps:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/campanile.png">
+                <p>Berkeley Campanile</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.1/t250.png">
+                <p>Noisy Campanile at t=250</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.1/t500.png">
+                <p>Noisy Campanile at t=500</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.1/t750.png">
+                <p>Noisy Campanile at t=750</p>
+            </div>
+        </div>
+        <h4>1.2. Classical Denoising</h4>
+        <p>I applied Gaussian blur filtering with <code>kernel_size=11</code> using <code>torchvision.transforms.functional.gaussian_blur</code> as an attempt to denoise the images. Here are the noisy images and their Gaussian-denoised verison shown together for comparison:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.1/t250.png">
+                <p>Noisy Campanile at t=250</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.1/t500.png">
+                <p>Noisy Campanile at t=500</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.1/t750.png">
+                <p>Noisy Campanile at t=750</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.2/t250.png">
+                <p>Gaussian Blur Denoising at t=250</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.2/t500.png">
+                <p>Gaussian Blur Denoising at t=500</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.2/t750.png">
+                <p>Gaussian Blur Denoising at t=750</p>
+            </div>
+        </div>
+        
+        <h4>1.3. One-Step Denoising</h4>
+        <p>To denoise with UNet, I first recreated the noisy images of different timesteps using the algorithm from 1.1. Then, I obtained the estimated noise from the UNet denoiser and use this to solve for the clean image by solving equation (2) for \(x_0\): <code>(im_noisy - torch.sqrt(1 - alpha_cumprod)*noise_est)/torch.sqrt(alpha_cumprod)</code>. Here are the noisy images and their one-step denoised version shown together for comparison:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.1/t250.png">
+                <p>Noisy Campanile at t=250</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.1/t500.png">
+                <p>Noisy Campanile at t=500</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.1/t750.png">
+                <p>Noisy Campanile at t=750</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.3/t250.png">
+                <p>One-Step Denoised Campanile at t=250</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.3/t500.png">
+                <p>One-Step Denoised Campanile at t=500</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.3/t750.png">
+                <p>One-Step Denoised Campanile at t=750</p>
+            </div>
+        </div>
+
+        <h4>1.4. Iterative Denoising</h4>
+        <p>Using <code>strided_timesteps</code>, a list of timesteps from 990 to 0 in steps of 30 and the formula \(x_{t^{'}}=\frac{\sqrt{\bar{\alpha_{t^{'}}}}\beta_t}{1-\bar{\alpha_t}}x_0 + \frac{\sqrt{\alpha_t}(1-\bar{\alpha_{t^{'}}})}{1-\bar{\alpha_t}}x_t + v_{\sigma}\) where \(x_0\) is the current estimate of the clean image just like in section 1.3, I implemented <code>iterative_denoise</code> function. Here is the noisy image every 5th loop of denoising:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.4/t90.png">
+                <p>Noisy Campanile at t=90</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.4/t240.png">
+                <p>Noisy Campanile at t=240</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.4/t390.png">
+                <p>Noisy Campanile at t=390</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.4/t540.png">
+                <p>Noisy Campanile at t=540</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.4/t690.png">
+                <p>Noisy Campanile at t=690</p>
+            </div>
+        </div>
+        <p>Here is the original image, the denoised image using iterative denoising, the predicted clean image using only a single denoising step, and the predicted clean image using gaussian blurring respectively:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/campanile.png">
+                <p>Original</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.4/iterative_denoised.png">
+                <p>Iterative Denoised Campanile</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.4/onestep_denoised.png">
+                <p>One-Step Denoised Campanile</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.4/gaussian.png">
+                <p>Gaussian Blurred Campanile</p>
+            </div>
+        </div>
+
+
+        <h4>1.5. Diffusion Model Sampling</h4>
+        <p>Using the same <code>iterative_denoise</code> function as part 1.4, I generated 5 sampled images by passing in <code>i_start = 0</code>, pure Gaussian noise as the input image, and the prompt <code>"a high quality photo"</code>:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.5/1.png">
+                <p>Sample 1</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.5/2.png">
+                <p>Sample 2</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.5/3.png">
+                <p>Sample 3</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.5/4.png">
+                <p>Sample 4</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.5/5.png">
+                <p>Sample 5</p>
+            </div>
+        </div>
+
+        <h4>1.6. Classifier-Free Guidance (CFG)</h4>
+        <p>To implement Classifier-Free Guidance, I add another argument for the <code>iterative_denoise_cfg</code> function that takes in a prompt for unconditional guidance. Rather than using the conditional noise estimate as the true noise estimate, I computed the true noise estimate using both a conditional and an unconditional noise estimate according to the formula \(\epsilon=\epsilon_u + \gamma(\epsilon_c - \epsilon_u)\), where \(\gamma\) controls the strength of CFG. Using <code>"a high quality photo"</code> as the conditional prompt, <code>""</code> as the unconditional prompt, and \(\gamma=7\), I generated the following 5 samples:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.6/1.png">
+                <p>Sample 1 with CFG</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.6/2.png">
+                <p>Sample 2 with CFG</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.6/3.png">
+                <p>Sample 3 with CFG</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.6/4.png">
+                <p>Sample 4 with CFG</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.6/5.png">
+                <p>Sample 5 with CFG</p>
+            </div>
+        </div>
+
+        <h4>1.7. Image-to-image translation</h4>
+        <p>To implement image-to-image translation, I added noise to a real image and then denoise it with <code>iterative_denoise_cfg</code> with the prompt <code>"a high quality photo"</code>. Here are my results when the input image is the test image:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.7/campanile1.png">
+                <p>SDEdit of Campanile with <code>i_start=1</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/campanile3.png">
+                <p>SDEdit of Campanile with <code>i_start=3</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/campanile5.png">
+                <p>SDEdit of Campanile with <code>i_start=5</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/campanile7.png">
+                <p>SDEdit of Campanile with <code>i_start=7</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/campanile10.png">
+                <p>SDEdit of Campanile with <code>i_start=10</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/campanile20.png">
+                <p>SDEdit of Campanile with <code>i_start=20</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/campanile0.png">
+                <p>Original Campanile</p>
+            </div>
+        </div>
+
+        <p>Here are my results when the input image is an image of the Notre Dame Cathedral:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.7/nd1.png">
+                <p>SDEdit of Notre Dame with <code>i_start=1</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/nd3.png">
+                <p>SDEdit of Notre Dame with <code>i_start=3</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/nd5.png">
+                <p>SDEdit of Notre Dame with <code>i_start=5</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/nd7.png">
+                <p>SDEdit of Notre Dame with <code>i_start=7</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/nd10.png">
+                <p>SDEdit of Notre Dame with <code>i_start=10</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/nd20.png">
+                <p>SDEdit of Notre Dame with <code>i_start=20</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/nd0.png">
+                <p>Original Notre Dame</p>
+            </div>
+        </div>
+
+        <p>Here are my results when the input image is an image of the Sydney Opera House:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.7/opera1.png">
+                <p>SDEdit of Opera House with <code>i_start=1</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/opera3.png">
+                <p>SDEdit of Opera House with <code>i_start=3</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/opera5.png">
+                <p>SDEdit of Opera House with <code>i_start=5</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/opera7.png">
+                <p>SDEdit of Opera House with <code>i_start=7</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/opera10.png">
+                <p>SDEdit of Opera House with <code>i_start=10</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/opera20.png">
+                <p>SDEdit of Opera House with <code>i_start=20</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7/opera0.png">
+                <p>Original Opera House</p>
+            </div>
+        </div>
+        
+        <h5>1.7.1. Editing Hand-Drawn and Web Images</h5>
+        <p>In this part, I applied the function <code>iterative_denoise_cfg</code> to non-realistic and hand drawn images. For my displays, the first six images will be the generated ones while the last (the rightmost) image is the original/input image. Here is the result that I obtained from an image of a cat from the web:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.7.1/cat1.png">
+                <p>Cat at <code>i_start=1</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/cat3.png">
+                <p>Cat at <code>i_start=3</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/cat5.png">
+                <p>Cat at <code>i_start=5</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/cat7.png">
+                <p>Cat at <code>i_start=7</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/cat10.png">
+                <p>Cat at <code>i_start=10</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/cat20.png">
+                <p>Cat at <code>i_start=20</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/cat0.png">
+                <p>Cat</p>
+            </div>
+        </div>
+
+        <p>Here is the result that I obtained from my own hand drawn image of a car:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.7.1/car1.png">
+                <p>Car at <code>i_start=1</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/car3.png">
+                <p>Car at <code>i_start=3</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/car5.png">
+                <p>Car at <code>i_start=5</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/car7.png">
+                <p>Car at <code>i_start=7</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/car10.png">
+                <p>Car at <code>i_start=10</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/car20.png">
+                <p>Car at <code>i_start=20</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/car0.png">
+                <p>Car</p>
+            </div>
+        </div>
+
+        <p>Here is the result that I obtained from my own hand drawn image of a house:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.7.1/house1.png">
+                <p>House at <code>i_start=1</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/house3.png">
+                <p>House at <code>i_start=3</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/house5.png">
+                <p>House at <code>i_start=5</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/house7.png">
+                <p>House at <code>i_start=7</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/house10.png">
+                <p>House at <code>i_start=10</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/house20.png">
+                <p>House at <code>i_start=20</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.1/house0.png">
+                <p>House</p>
+            </div>
+        </div>
+
+        <h5>1.7.2. Inpainting</h5>
+        <p>To implement <code>inpaint</code>, I modified the function <code>iterative_denoise_cfg</code> such that after obtaining \(x_t\) at every step, I forced \(x_t\) to have the same pixels as \(x_{orig}\) where the binary mask is 0, i.e. <code>pred_prev_image = mask*pred_prev_image + (1-mask)*forward(original_image, t)</code>. Here is the inpainted test image of Campanile:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.7.2/campanile.png">
+                <p>Campanile</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.2/campanile_mask.png">
+                <p>Campanile Mask</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.2/campanile_hole.png">
+                <p>Campanile Hole to Fill</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.2/campanile_inpainted.png">
+                <p>Campanile Inpainted</p>
+            </div>
+        </div>
+
+        <p>Here is the inpainted image of somewhere with a lot of ice:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.7.2/penguin.png">
+                <p>Penguin</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.2/penguin_mask.png">
+                <p>Penguin Mask</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.2/penguin_hole.png">
+                <p>Penguin Hole to Fill</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.2/penguin_inpainted.png">
+                <p>Penguin Inpainted</p>
+            </div>
+        </div>
+
+        <p>Here is the inpainted image of somewhere with a lot of ice:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.7.2/painting.png">
+                <p>Painting</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.2/painting_mask.png">
+                <p>Painting Mask</code></p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.2/painting_hole.png">
+                <p>Painting Hole to Fill</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.2/painting_inpainted.png">
+                <p>Painting Inpainted</p>
+            </div>
+        </div>
+        
+        <h5>1.7.3. Text-Conditional Image-to-image Translation</h5>
+        <p>For this part, I applied the function <code>iterative_denoise_cfg</code> using a different text prompt from <code>"a high quality photo"</code>. For my displays, the first six images will be the generated ones while the last (the rightmost) image is the original/input image. Using the test image of the Campanile and the prompt <code>"a rocket ship"</code>, I obtained: </p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.7.3/campanile1.png">
+                <p>Rocket Ship at nosie level 1</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/campanile3.png">
+                <p>Rocket Ship at nosie level 3</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/campanile5.png">
+                <p>Rocket Ship at nosie level 5</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/campanile7.png">
+                <p>Rocket Ship at nosie level 7</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/campanile10.png">
+                <p>Rocket Ship at nosie level 10</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/campanile20.png">
+                <p>Rocket Ship at nosie level 20</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/campanile0.png">
+                <p>Campanile</p>
+            </div>
+        </div>
+
+        <p>Using an image of the Notre Dame Cathedral and the prompt <code>"a prison building"</code>, I obtained:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.7.3/nd1.png">
+                <p>Prison Building at nosie level 1</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/nd3.png">
+                <p>Prison Building at nosie level 3</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/nd5.png">
+                <p>Prison Building at nosie level 5</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/nd7.png">
+                <p>Prison Building at nosie level 7</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/nd10.png">
+                <p>Prison Building at nosie level 10</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/nd20.png">
+                <p>Prison Building at nosie level 20</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/nd0.png">
+                <p>Notre Dame Cathedral</p>
+            </div>
+        </div>
+
+        <p>Using an image of a painting in a museum and the prompt <code>"a television"</code>, I obtained:</p>
+        <div class="image-container">
+            <div class="image-single-lr">
+                <img src="out/1.7.3/p1.png">
+                <p>Television at nosie level 1</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/p3.png">
+                <p>Television at nosie level 3</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/p5.png">
+                <p>Television at nosie level 5</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/p7.png">
+                <p>Television at nosie level 7</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/p10.png">
+                <p>Television at nosie level 10</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/p20.png">
+                <p>Television at nosie level 20</p>
+            </div>
+            <div class="image-single-lr">
+                <img src="out/1.7.3/p0.png">
+                <p>Painting in a Museum</p>
+            </div>
+        </div>
+
+        <h4>1.8. Visual Anagrams</h4>
+        <p>To implement the technique for creating visual anagrams from the spec, I applied the formula from the spec \(\epsilon = (\epsilon_1 + \epsilon_2)/2\) where \(\epsilon_1 = \text{UNet}(x_t, t, p_1)\) and \(\epsilon_1 = \text{flip}(\text{UNet}(\text{flip}(x_t), t, p_1)\)). I applied CFG to each of the generated noise prior to combining them. Using the prompts <code>"an oil painting of people around a campfire"</code> and <code>"an oil painting of an old man"</code>, I created a visual anagram where on one orientation <code>"an oil painting of people around a campfire"</code> is displayed and, when flipped, <code>"an oil painting of an old man"</code> is displayed:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/1.8/fire_man.png" width=40%>
+            </div>
+            <div class="image-single">
+                <img src="out/1.8/man_fire.png" width=40%>
+            </div>
+        </div>
+
+        <p>Using the prompts <code>"a painting of a dog"</code> and <code>"a painting of a dorm room"</code>, I created a visual anagram where on one orientation <code>"a painting of a dog"</code> is displayed and, when flipped, <code>"a painting of a dorm room"</code> is displayed:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/1.8/dog_dorm.png" width=40%>
+            </div>
+            <div class="image-single">
+                <img src="out/1.8/dorm_dog.png" width=40%>
+            </div>
+        </div>
+
+        <p>Using the prompts <code>"an ink drawing of an old man"</code> and <code>"an ink drawing of a penguin"</code>, I created a visual anagram where on one orientation <code>"an ink drawing of an old man"</code> is displayed and, when flipped, <code>"an ink drawing of a penguin"</code> is displayed:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/1.8/man_penguin.png" width=40%>
+            </div>
+            <div class="image-single">
+                <img src="out/1.8/penguin_man.png" width=40%>
+            </div>
+        </div>
+
+        <h4>1.9. Hybrid Images</h4>
+        <p>To implement the technique for creating hybrid images from the spec, I applied the formula from the spec \(\epsilon = f_{\text{lowpass}}(\epsilon_1) + f_{\text{highpass}}(\epsilon_2)\) to all three variables <code>noise_est, uncond_noise_est, predicted_variance</code> of the two prompts. I then applied CFG from previous part on the resulting <code>noise_est, uncond_noise_est</code> to obtain the predicted nosie that would be used to continue the diffusion process. For the Gaussian filter, I used <code>kernel_size=33</code> and <code>sigma=2</code>. Using the prompts <code>"a lithograph of a skull"</code> and <code>"a lithograph of waterfalls"</code>, I created an image that looks like a <code>skull</code> from far away but a <code>waterfall</code> from up close:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/1.9/skull_waterfall.png" width=12%>
+            </div>
+            <div class="image-single">
+                <img src="out/1.9/skull_waterfall.png" width=50%>
+            </div>
+        </div>
+
+        <p>Using the prompts <code>"a lithograph of a skull"</code> and <code>"a lithograph of flower arrangements"</code>, I created an image that looks like a <code>skull</code> from far away but an <code>arrangement of flower</code> from up close:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/1.9/skull_flower.png" width=12%>
+            </div>
+            <div class="image-single">
+                <img src="out/1.9/skull_flower.png" width=50%>
+            </div>
+        </div>
+
+        <p>Using the prompts <code>"a lithograph of a panda"</code> and <code>"a lithograph of flower arrangements"</code>, I created an image that looks like a <code>panda</code> from far away but an <code>arrangement of flower</code> from up close:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/1.9/panda_flower.png" width=12%>
+            </div>
+            <div class="image-single">
+                <img src="out/1.9/panda_flower.png" width=50%>
+            </div>
+        </div>
+        
+        <h2>PART B: DIFFUSION MODELS FROM SCRATCH</h2>
+        <h4>1. Single-Step Denoising UNet/Unconditional UNet</h4>
+        <p>Here are the results of adding Gaussian noise to a clean image \(x\) according to \(z = x + \sigma\epsilon\) where \(\epsilon ~ N(0, I)\) for different values of \(\sigma\): </p>
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single-lr">
+                    <p>\(\sigma=0.0\)</p>
+                    <img src="out/fig3/digit0sigma0.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>\(\sigma=0.2\)</p>
+                    <img src="out/fig3/digit0sigma1.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>\(\sigma=0.4\)</p>
+                    <img src="out/fig3/digit0sigma2.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>\(\sigma=0.5\)</p>
+                    <img src="out/fig3/digit0sigma3.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>\(\sigma=0.6\)</p>
+                    <img src="out/fig3/digit0sigma4.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>\(\sigma=0.8\)</p>
+                    <img src="out/fig3/digit0sigma5.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>\(\sigma=1.0\)</p>
+                    <img src="out/fig3/digit0sigma6.png">
+                </div>
+            </div>
+            <div class="image-row">
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit1sigma0.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit1sigma1.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit1sigma2.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit1sigma3.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit1sigma4.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit1sigma5.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit1sigma6.png">
+                </div>
+            </div>
+            <div class="image-row">
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit2sigma0.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit2sigma1.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit2sigma2.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit2sigma3.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit2sigma4.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit2sigma5.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit2sigma6.png">
+                </div>
+            </div>
+            <div class="image-row">
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit3sigma0.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit3sigma1.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit3sigma2.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit3sigma3.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit3sigma4.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit3sigma5.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit3sigma6.png">
+                </div>
+            </div>
+            <div class="image-row">
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit4sigma0.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit4sigma1.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit4sigma2.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit4sigma3.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit4sigma4.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit4sigma5.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig3/digit4sigma6.png">
+                </div>
+            </div>
+            <div class="caption">
+                <p>Varying levels of noise on MNIST digits</p>
+            </div>
+        </div>
+
+        <p>I then implemented standard tensor operations and UNet according to figure 1 and figure 2 from the spec. Training the unconditional UNet on noisy images generated with \(\sigma=0.5\), I was able to yield the following loss curve over the entire training process:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/fig4.png">
+                <p>Training Loss Curve</p>
+            </div>
+        </div>
+
+        <p>Here are the denoised results on the test set after 1 epoch of training and at the end of training:</p>
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single-lr">
+                    <p>Input</p>
+                    <img src="out/fig5/0input.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Noisy (\(\sigma=0.5\))</p>
+                    <img src="out/fig5/0noisy.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Output</p>
+                    <img src="out/fig5/0output.png">
+                </div>
+            </div>
+            <div class="image-row">
+                <div class="image-single-lr">
+                    <img src="out/fig5/1input.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig5/1noisy.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig5/1output.png">
+                </div>
+            </div>
+            <div class="image-row">
+                <div class="image-single-lr">
+                    <img src="out/fig5/2input.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig5/2noisy.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig5/2output.png">
+                </div>
+            </div>
+            <div class="caption">
+                <p>Results on digits from the test set after 1 epoch of training</p>
+            </div>
+        </div>
+
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single-lr">
+                    <p>Input</p>
+                    <img src="out/fig6/0input.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Noisy (\(\sigma=0.5\))</p>
+                    <img src="out/fig6/0noisy.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Output</p>
+                    <img src="out/fig6/0output.png">
+                </div>
+            </div>
+            <div class="image-row">
+                <div class="image-single-lr">
+                    <img src="out/fig6/1input.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig6/1noisy.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig6/1output.png">
+                </div>
+            </div>
+            <div class="image-row">
+                <div class="image-single-lr">
+                    <img src="out/fig6/2input.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig6/2noisy.png">
+                </div>
+                <div class="image-single-lr">
+                    <img src="out/fig6/2output.png">
+                </div>
+            </div>
+            <div class="caption">
+                <p>Results on digits from the test set after 5 epochs of training</p>
+            </div>
+        </div>
+
+        <p>For out-of-distribution testing, I attempted to use the trained unconditional UNet to denoise noisy images with \(\sigma \neq 0.5\). Here are the denoised results on test set digits with varying levels of noise \(\sigma\):</p>
+        <div class="image-container-caption">
+            <div class="image-row">
+                <div class="image-single-lr">
+                    <p>Noisy Image with (\(\sigma=0.0\))</p>
+                    <img src="out/fig7/0input.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Noisy Image with (\(\sigma=0.2\))</p>
+                    <img src="out/fig7/1input.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Noisy Image with (\(\sigma=0.4\))</p>
+                    <img src="out/fig7/2input.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Noisy Image with (\(\sigma=0.5\))</p>
+                    <img src="out/fig7/3input.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Noisy Image with (\(\sigma=0.6\))</p>
+                    <img src="out/fig7/4input.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Noisy Image with (\(\sigma=0.8\))</p>
+                    <img src="out/fig7/5input.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Noisy Image with (\(\sigma=1.0\))</p>
+                    <img src="out/fig7/6input.png">
+                </div>
+            </div>
+            <div class="image-row">
+                <div class="image-single-lr">
+                    <p>Denoised Output</p>
+                    <img src="out/fig7/0output.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Denoised Output</p>
+                    <img src="out/fig7/1output.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Denoised Output</p>
+                    <img src="out/fig7/2output.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Denoised Output</p>
+                    <img src="out/fig7/3output.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Denoised Output</p>
+                    <img src="out/fig7/4output.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Denoised Output</p>
+                    <img src="out/fig7/5output.png">
+                </div>
+                <div class="image-single-lr">
+                    <p>Denoised Output</p>
+                    <img src="out/fig7/6output.png">
+                </div>
+            </div>
+            <div class="caption">
+                <p>Results on digits from the test set with varying noise levels</p>
+            </div>
+        </div>
+        
+        <h4>2. Time-Conditioned UNet</h4>
+        <p>I implemented the fully connected block and the injection of scalar \(t\) into our unconditional UNet model to condition it according to figure 8 and figure 9 from the spec. Training the time-conditioned UNet to predict the noise in a noisy image given an image and a timestep, I was able to yield the following loss curve over the entire training process:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/fig10.png">
+                <p>Time-Conditioned UNet training loss curve</p>
+            </div>
+        </div>
+
+        <p>Here are the denoised results of the time-conditioned UNet after 1, 5, 10, 15, and 20 epochs of training:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/condunet/Epoch 1.png" width=100%>
+                <p>Epoch 1</p>
+            </div>
+            <div class="image-single">
+                <img src="out/condunet/Epoch 5.png" width=100%>
+                <p>Epoch 5</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/condunet/Epoch 10.png" width=100%>
+                <p>Epoch 10</p>
+            </div>
+            <div class="image-single">
+                <img src="out/condunet/Epoch 15.png" width=100%>
+                <p>Epoch 15</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/condunet/Epoch 20.png" width=60%>
+                <p>Epoch 20</p>
+            </div>
+        </div>
+
+        <h4>3. Class-Conditioned UNet</h4>
+        <p>I implemented the injection of the class conditioning vector \(c\) into our time-conditioned UNet model to condition it according to the spec. I also implemented dropout where 10% of the time, the class conditioning vector \(c\) is set to 0 so our UNet would still work without being conditioned on the class. Training the class-conditioned UNet to predict the noise in a noisy image given an image, a timestep, and a label, I was able to yield the following loss curve over the entire training process:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/fig11.png">
+                <p>Class-Conditioned UNet training loss curve</p>
+            </div>
+        </div>
+
+        <p>Here are the denoised results of the class-conditioned UNet after 1, 5, 10, 15, and 20 epochs of training:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/ccunet/Epoch 1.png" width=100%>
+                <p>Epoch 1</p>
+            </div>
+            <div class="image-single">
+                <img src="out/ccunet/Epoch 5.png" width=100%>
+                <p>Epoch 5</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/ccunet/Epoch 10.png" width=100%>
+                <p>Epoch 10</p>
+            </div>
+            <div class="image-single">
+                <img src="out/ccunet/Epoch 15.png" width=100%>
+                <p>Epoch 15</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/ccunet/Epoch 20.png" width=60%>
+                <p>Epoch 20</p>
+            </div>
+        </div>
+
+        <footer>
+            <h2>Acknowledgements</h2>
+            <p>This project displays the results for Project 5 of CS 180 at UC Berkeley. Methods were adapted from various sources, including course staff suggestions, algorithms from <a href="https://arxiv.org/pdf/2006.11239">Ho et al.</a>, and external libraries such as <code>scikit-image</code> and <code>numpy</code>.</p>
+        </footer>
+    </div>
+</body>
+</html>
