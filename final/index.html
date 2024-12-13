@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Final Project by Quang Nguyen</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
+</head>
+<body>
+    <div class="back-button">
+        <a href="../index.html">&larr; Back to Portfolio</a>
+    </div>
+    <div class="body-container">
+        <h1>NEURAL RADIANCE FIELDS</h1>
+        <h3>Quang Nguyen, SID: 3036566521</h3>
+
+        <h4>Project Overview</h4>
+        <p>In this project, I implemented two simplified version of Neural Radiance Field that can fit a 2D Image and Multi-view Images respectively. </p>
+
+        <h2>PART 1: FIT A NEURAL FIELD TO 2D IMAGE</h2>
+
+        <h4>1.1. Network</h4>
+        <p>My model has a similar architecture to the one referenced on the project spec. Each coordinate <code>(x,y)</code> is passed into a positional encoding layer, which converted a <code>B x 2</code> input tensor to an encoded <code>B x 4L+2</code> output tensor. This layer is followed by a Multilayer Perceptron (MLP) network with three hidden linear layers of dimension <code>256</code> and a final linear layer of size <code>3</code>. Each hidden linear layer is followed by a <code>nn.ReLU</code> while the final output layer is followed by a <code>nn.Sigmoid</code>. </p>
+        
+        <h4>1.2. Dataloader</h4>
+        <p>Rather than implementing a random sampling dataloader with <code>torch.Dataset</code>, which takes an absurd amount of time to run for a small image, I directly sample new <code>N</code> pixels for every training iteration. This allows the model to run much faster and more efficiently. </p>
+        
+        <h4>1.3. Hyperparameter Tuning for Fox</h4>
+        <h5>1.3.1. Learning Rate</h5>
+        <p>The first parameter that I tuned is the learning rate, which I varied by a factor of 10. We can see that The best learning rate that 0.01 and 0.001 yield similar performance while 0.0001 is slight worse. <code>1e-05</code> wasn't able to converge in <code>5000</code> iterations because it is too low, suggesting that if trained for longer, this learning rate might still be to achieve a similar PSNR with the other learning rates. Both 0.1 and 1 are too high and they both converge to an extremely high value of training loss and low value of training PSNR. In the end, I decided on using <code>lr=0.001</code>, the green curve in the graph that seems to converge to the highest PSNR value.</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part1/lr_losses.png" alt="Losses for tuning learning rate">
+                <p>Losses</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/lr_psnrs.png" alt="PSNRS for tuning learning rate">
+                <p>PSNRs</p>
+            </div>
+        </div>
+        <h5>1.3.2. Highest Frequency Level of the Positional Encoding layer</h5>
+        <p>The next parameter that I tuned is the highest frequency level of the positional encoding layer, which I varied by 5. When the frequency level is 5, the model performs the worse both in terms of PSNR and loss. For higher frequency levels between 10 and 25, they yield similar performance in PSNR. In the end, I decided on using <code>L=20</code>, the red curve in the graph that seems to converge to the highest PSNR value.</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part1/freq_losses.png" alt="Losses for tuning max frequency">
+                <p>Losses</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/freq_psnrs.png" alt="PSNRS for tuning max frequency">
+                <p>PSNRs</p>
+            </div>
+        </div>
+
+        <h4>1.4. Final Result for Fox</h4>
+        <p>The final result for the fox image was generated using the model architecture as descrived above, a learning rate of <code>0.001</code>, and <code>L=20</code>. This model is then trained over 5000 iterations. Here are the output images obtained every 100 iterations in the first 1000 iterations:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part1/iterations/fox1.jpg" alt="Fox at iteration 0">
+                <p>Iter 0</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/fox100.jpg" alt="Fox at iteration 100">
+                <p>Iter 100</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/fox200.jpg" alt="Fox at iteration 200">
+                <p>Iter 200</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/fox300.jpg" alt="Fox at iteration 300">
+                <p>Iter 300</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/fox400.jpg" alt="Fox at iteration 400">
+                <p>Iter 400</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/fox500.jpg" alt="Fox at iteration 500">
+                <p>Iter 500</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part1/iterations/fox600.jpg" alt="Fox at iteration 600">
+                <p>Iter 600</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/fox700.jpg" alt="Fox at iteration 700">
+                <p>Iter 700</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/fox800.jpg" alt="Fox at iteration 800">
+                <p>Iter 800</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/fox900.jpg" alt="Fox at iteration 900">
+                <p>Iter 900</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/fox1000.jpg" alt="Fox at iteration 1000">
+                <p>Iter 1000</p>
+            </div>
+        </div>
+        <p>Here are the training losses and psnrs curve for the final result:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part1/fox_losses.png" alt="Losses for fox">
+                <p>Losses</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/fox_psnrs.png" alt="PSNRS for fox">
+                <p>PSNRs</p>
+            </div>
+        </div>
+        <p>Here is the final result in comparison with the input image:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="fox.jpg" alt="Fox input">
+                <p>Input Image</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/fox_im.jpg" alt="reconstructed fox">
+                <p>Final reconstructed fox with <code>PSNR=27.85</code></p>
+            </div>
+        </div>
+
+        <h4>1.5. Hyperparameter Tuning for Notre Dame</h4>
+        <h5>1.5.1. Learning Rate</h5>
+        <p>The first parameter that I tuned is the learning rate, which I varied by a factor of 10. I decided on using the best learning rate <code>lr=0.001</code>, the green curve in the graph that seems to converge to the highest PSNR value.</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part1/nd_lr_losses.png" alt="Losses for tuning learning rate for Notre Dame">
+                <p>Losses</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/nd_lr_psnrs.png" alt="PSNRS for tuning learning rate for Notre Dame">
+                <p>PSNRs</p>
+            </div>
+        </div>
+        <h5>1.5.2. Highest Frequency Level of the Positional Encoding layer</h5>
+        <p>The next parameter that I tuned is the highest frequency level of the positional encoding layer, which I varied by 5. I decided on using the best max frequency <code>L=10</code>, the orange curve in the graph that seems to converge to the highest PSNR value.</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part1/nd_freq_losses.png" alt="Losses for tuning max frequency for Notre Dame">
+                <p>Losses</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/nd_freq_psnrs.png" alt="PSNRS for tuning max frequency for Notre Dame">
+                <p>PSNRs</p>
+            </div>
+        </div>
+
+        <h4>1.6. Final Result for Notre Dame</h4>
+        <p>The final result for the Notre Dame image was generated using the model architecture as descrived above, a learning rate of <code>0.001</code>, and <code>L=10</code>. This model is then trained over <code>15000</code> iterations. Here are the output images obtained every 100 iterations in the first 1000 iterations:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part1/iterations/notredame1.jpg" alt="Notre Dame at iteration 0">
+                <p>Iter 0</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/notredame100.jpg" alt="Notre Dame at iteration 100">
+                <p>Iter 100</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/notredame200.jpg" alt="Notre Dame at iteration 200">
+                <p>Iter 200</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/notredame300.jpg" alt="Notre Dame at iteration 300">
+                <p>Iter 300</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/notredame400.jpg" alt="Notre Dame at iteration 400">
+                <p>Iter 400</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/notredame500.jpg" alt="Notre Dame at iteration 500">
+                <p>Iter 500</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part1/iterations/notredame600.jpg" alt="Notre Dame at iteration 600">
+                <p>Iter 600</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/notredame700.jpg" alt="Notre Dame at iteration 700">
+                <p>Iter 700</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/notredame800.jpg" alt="Notre Dame at iteration 800">
+                <p>Iter 800</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/notredame900.jpg" alt="Notre Dame at iteration 900">
+                <p>Iter 900</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/iterations/notredame1000.jpg" alt="Notre Dame at iteration 1000">
+                <p>Iter 1000</p>
+            </div>
+        </div>
+        <p>Here are the training losses and psnrs curve for the final result:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part1/nd_losses.png" alt="Losses for Notre Dame">
+                <p>Losses</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/nd_psnrs.png" alt="PSNRS for Notre Dame">
+                <p>PSNRs</p>
+            </div>
+        </div>
+        <p>Here is the final result in comparison with the input image:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="notredame.jpg" alt="Notre Dame input">
+                <p>Input Image</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part1/notredame_im.jpg" alt="reconstructed Notre Dame">
+                <p>Final reconstructed Notre Dame with <code>PSNR=24.01</code></p>
+            </div>
+        </div>
+
+        <h2>PART 2: FIT A NEURAL FIELD TO FROM MULTI-VIEW IMAGES</h2>
+        <h4>2.1. Create Rays from Cameras</h4>
+        <h5>2.1.1. Camera to Wolrd Coordinate Conversion</h5>    
+        <p>To implement <code>transform(c2w, x_c)</code>, I first concatenated ones to the batched 3D coordinates <code>x_c</code> to obtain the batched 3D homogenous coordinates <code>x_c_ones</code>. I then transposed them such that their dimension is consistent with the equation setup and used <code>torch.bmm</code> to right multiply <code>c2w</code> with the transposed coordinates. Finally, I returned the resulting world-space coordinate by indexing the output of the matrix multiplication and ignore all the ones.</p>
+        
+        <h5>2.1.2. Pixel to Camera Coordinate Conversion</h5>
+        <p>To implement <code>pixel_to_camera(K, uv, s)</code>, I first concatenated ones to the batched 2D coordinates <code>uv</code> to obtain the batched 2D homogenous coordinates <code>uv_ones</code>. I then reshaped <code>uv_ones</code> to swap the x- and y- coordinates accordingly and used <code>torch.bmm</code> to right multiply <code>K.inverse()</code> with the reshaped <code>uv_ones</code>. Finally, I transposed the output of this multiplication such that its dimension and view is consistent with the rest of the project and return its product with <code>s</code>, which gives the transformed coordinates in camera space. </p>
+        <p>Note that <code>K</code>, the intrinsic matrix, is constructed with <code>o_x=image_width/2, o_y=image_height/2, f_x=f_y=focal</code> where <code>focal=data["focal"]</code> given by the input file. </p>
+        
+        <h5>2.1.3. Pixel to Ray</h5>
+        <p>To implement <code>pixel_to_ray(K, c2w, uv)</code>, I first obtained the camera-space coordinates with <code>x_c = pixel_to_camera(K, uv, s)</code> where <code>s</code> is just a tensor of ones. Then, I extracted <code>R, t</code> by indexing properly from <code>w2c = torch.inverse(c2w)</code> and computed <code>ray_o</code> by right multiply <code>-R.inverse</code> with <code>t</code> using <code>torch.bmm</code>. To acquire <code>ray_d</code>, I first obtained the world-space coordinates by calling <code>transform(c2w, x_c)</code> and subtracted <code>ray_o</code> from this result. Finally, I returned <code>ray_o</code> and the normalized version of <code>ray_d</code>.</p>
+
+        <h4>2.2. Sampling</h4>
+        <h5>2.2.1. Sampling Rays from Images</h5>
+        <p>The function <code>sample_rays(batch_size, single=False, single_idx=None)</code> is implemented as followed: I first flattened pixels and rays from all images with <code>reshape(-1,3)</code>. <code>single</code> is to denote whether I wanted to retrieve <code>batch_size</code> rays from all images or whether I want to retrieve all the rays of a desired image with index <code>single_idx</code>. If <code>single=False</code>, then I acquired <code>batch_size</code> random indices with <code>torch.randint(0, pixels.shape[0], (batch_size,))</code> and returned the appropriately indexed rays and pixels. This is the random sampling that will be used in training and validation.</p>
+        <p>If <code>single=True</code>, then <code>single_idx</code> is not <code>None</code> and will represent the camera/image index whose rays we want to obtain. This was used during volume rendering, where I inputted the camera index of the camera test set to obtain the desired rays for reconstruction. </p>
+        <h5>2.2.2. Sampling Points along Rays</h5>
+        <p>To implement <code>sample_along_rays(ray_o, ray_d, near=2.0, far=6.0, num_samples=64, pertubation=True)</code>, I first computed <code>t = torch.linspace(near, far, num_samples, device=ray_o.device)</code> and <code>t_width = (far-near)/num_samples</code>. If <code>pertubation=True</code>, then I will small random noise <code>torch.rand(t.shape, device=t.device) * t_width</code> to <code>t</code> so that every location along the ray would be touched upon. Finally, I returned the obtained 3D coordinates from adding <code>ray_o + ray_d * t</code>.</p>
+        <p>Note that I used the default parameters for this function: <code>near=2.0, far=6.0, and num_samples=64</code>.</p>
+
+        <h4>2.3. Putting the Dataloading all Together</h4>
+        <p>For Dataloading, I implemented the class <code>RaysData(images, K, c2ws)</code>. It is initialized with images, the intrinsic matrix K, and the corresponding c2w cameras. The <code>uvs</code> used in <code>sample_rays</code> will also be initialized here. <code>rays_o, rays_d</code> are also defined as this class's instance variable through <code>pixel_to_ray(self.Ks, self.c2ws, self.uvs)</code> to simplify sampling rays from images. This class will have two functions: <code>__init__</code> and <code>sample_rays</code>, which is the function described above. </p>
+        <p><code>uvs</code> is intialized as followed: three torch tensors <code>ns, ys, xs</code> will be defined where <code>ns=torch.arange(num_images)</code>, <code>ys=torch.arange(image_height)</code>, and  <code>xs=torch.arange(image_width)</code>. That is, to obtain the ground truth pixel value at coordinate <code>(x,y)</code>, in image n, we query <code>self.images[n, y, x]</code>. I then stacked these three tensors with <code>torch.tensor</code> to obtain <code>self.uvs</code>. Finally, I added <code>0.5</code> to the <code>xs</code> and <code>ys</code> in <code>self.uvs</code> to account for the offset from image coordinate to pixel center.</p>
+        <p>Here are the visualizations of rays and samples that I obtained using the implemented functions and <code>RaysData</code>:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part2/render1.png" alt="render1" width="100%">
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part2/render2.png" alt="render2" width="100%">
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part2/render3.png" alt="render3" width="100%">
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part2/render4.png" alt="render4" width="100%">
+            </div>
+        </div>
+
+        <h4>2.4. Neural Radiance Field</h4>
+        <p>I used the same model architecture as project website. I then split the network into 5 smaller subnets at each of the concatenation and implemeted them using <code>nn.Sequential</code>. I used default hyperparameters for my implementation; that is, <code>L_x=10, L_ray_d=4, and hidden_dim=256</code>. </p>
+        
+        <h4>2.5. Volume Rendering</h4>
+        <p>To implement <code>volrend(sigmas, rgbs, step_size)</code>, I first obtained <code>prod=sigmas * step_size</code> and computed the <code>T_i's</code> with <code>torch.exp(-step_size * torch.cumsum(sigmas, dim=1) + prod)</code>. I needed to subtract (addition after distributing the negative sign) prod from the cumulative sum because exponent of the <code>T_i</code> is the sum of the sigma-delta products up to but excluding <code>i</code>. I then returned the rendered colors <code>torch.sum(Ts * (1 - torch.exp(-prod)) * rgbs, dim=1)</code>.</p>
+
+        <h4>2.6. Final Result</h4>
+        <p>The final result for the input was generated using the model architecture as descrived above, a learning rate of <code>5e-4</code>, <code>L_x=10</code>, <code>L_d=4</code>, and <code>batch_size=10000</code>. This model is then trained over <code>5000</code> iterations, achieving a training loss of <code>0.002841</code>, training PSNR of <code>25.47 dB</code>, validation loss of <code>0.002137</code>, and validition PSNR of <code>26.70 dB</code>. Here are the images of camera 0 from the validation set obtained at iterations <code>0, 100, 200, 500, 1000, 2000</code>:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part2/iter_1.jpg" alt="lego at iteration 0" width="90%">
+                <p>Iter 0</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part2/iter_100.jpg" alt="lego at iteration 100" width="90%">
+                <p>Iter 100</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part2/iter_200.jpg" alt="lego at iteration 200" width="90%">
+                <p>Iter 200</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part2/iter_500.jpg" alt="lego at iteration 500" width="90%">
+                <p>Iter 500</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part2/iter_1000.jpg" alt="lego at iteration 1000" width="90%">
+                <p>Iter 1000</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part2/iter_2000.jpg" alt="lego at iteration 2000" width="90%">
+                <p>Iter 2000</p>
+            </div>
+        </div>
+        <p>Here are the losses and PSNRs curve for the final result:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part2/train_losses.png" alt="training losses for lego">
+                <p>Training Losses</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part2/train_psnrs.png" alt="training PSNRs for lego">
+                <p>Training PSNRs</p>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part2/val_losses.png" alt="validation losses for lego">
+                <p>Validation Losses</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part2/val_psnrs.png" alt="validation PSNRs for lego">
+                <p>Validation PSNRs</p>
+            </div>
+        </div>
+        <p>Here is the model's predicted of rendering using the cameras from the test set:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part2/test.gif" alt="rendering of the test set" width="50%">
+                <p>Final Rendering using the cameras from the test set</p>
+            </div>
+        </div>
+
+        <h2>PART 3: BELL AND WHISTLES</h2>
+        <h4>3.1. Rendering with different background colors</h4>
+        <p>To change the background color of the rendering, I modified the <code>volrend</code> function to take in a background color, which is a <code>1 x 3</code> RGB tensor of the desired color. I then compute the weight for the background color with <code>background_weights = torch.exp(-torch.sum(prod, dim=1))</code> where <code>prod = sigmas * step_size</code>. Finally, I added this to the original output of the <code>volrend</code> function. That is, <code>volrend_background</code> returns <code>torch.sum(Ts * (1 - torch.exp(-prod)) * rgbs, dim=1) + background_weights*background_color</code>. Here is the original rendering and the rendering with a different background color side by side for comparison:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part2/test.gif" alt="normal rendering" width="80%">
+                <p>Normal Rendering</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part2/background_test.gif" alt="rendering with different background color" width="80%">
+                <p>Rendering with a different background color</p>
+            </div>
+        </div>
+        <h4>3.2. Rendering of depths map</h4>
+        <p>To render a depths map, I passed <code>torch.linspace(1, 0, 64, device=pred_sigmas.device)</code> instead of the <code>pred_rgbs</code> (the output of the model) into <code>volrend</code> when sampling. Still using the same output densities from the model, this allows the <code>volrend</code> function to output a depths map where darker colors denote positions farther away from the camera and light colors illustrate positions closer to the camera. Here is the original rendering and the rendering of the depths map side by side for comparison:</p>
+        <div class="image-container">
+            <div class="image-single">
+                <img src="out/part2/test.gif" alt="normal rendering" width="80%">
+                <p>Normal Rendering</p>
+            </div>
+            <div class="image-single">
+                <img src="out/part2/depth_test.gif" alt="rendering of depths map" width="80%">
+                <p>Rendering of depths map</p>
+            </div>
+        </div>
+
+        <footer>
+            <h2>Acknowledgements</h2>
+            <p>This project displays the results for Final Project: Neural Radiance Fields! of CS 180 at UC Berkeley. Methods were adapted from various sources, including course staff suggestions, algorithms from <a href="https://arxiv.org/pdf/2003.08934">Tancik et al.</a>, and external libraries such as <code>scikit-image</code> and <code>numpy</code>.</p>
+        </footer>
+    </div>
+</body>
+</html>
